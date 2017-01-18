@@ -1,0 +1,19 @@
+---
+  - hosts: origin
+    gather_facts: no
+    roles:
+      - backup-mysql
+    vars:
+      - db_name: "tortik"
+      - db_user: "tortik"
+      - db_pass: "1Mu9J5EtQfAEewN7"
+
+  - hosts: origin
+    gather_facts: no
+    roles:
+      - backup-mysql
+    vars:
+      - db_name: "fototort"
+      - db_user: "fototort"
+      - db_pass: "a2lNL5j8tBsxBTLs"
+

@@ -1,0 +1,15 @@
+---
+  - hosts: origin
+    gather_facts: no
+    roles:
+      - backup-nginx
+    vars:
+      - site_name: "tortik.in.ua"
+
+  - hosts: origin
+    gather_facts: no
+    roles:
+      - backup-nginx
+    vars:
+      - site_name: "fototort.in.ua"
+

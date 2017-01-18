@@ -1,0 +1,3 @@
+---
+local_stage_dir: "{{ playbook_dir }}/../stage"
+backup_stage_dir: "~/backups"

@@ -1,0 +1,11 @@
+[servers]
+cate.rand.kiev.ua
+mara.rand.kiev.ua
+phoenix.rand.kiev.ua
+welch.rand.kiev.ua
+
+[origin]
+welch.rand.kiev.ua
+
+[backup]
+cate.rand.kiev.ua
