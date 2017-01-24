@@ -3,5 +3,5 @@
     local_action: file path={{ local_stage_dir }} state=directory mode=0750
 
   - name:  Backup nginx configuration
-    fetch: src=/etc/nginx/sites-available/{{ site_name }} dest={{ local_stage_dir }} flat=yes fail_on_missing=yes
+    fetch: src={{ nginx_sites_conf_dir }}/{{ site_name }} dest={{ local_stage_dir }} flat=yes fail_on_missing=yes
 
