@@ -22,7 +22,7 @@
     when: "os_image_file_name_status.stat.exists == False"
 
   - name: Check if image alredy in glance
-    shell: "source {{ os_client_script }} && openstack image list -f value -c Name | grep -w {{ os_instance_name }} | wc -l"
+    shell: "source {{ os_client_script }} && openstack image list -f value -c Name | grep -w '^{{ os_image_name }}$' | wc -l"
     register: os_image_glance_status
     args:
       executable: /bin/bash
@@ -32,13 +32,13 @@
     when: "os_image_glance_status.stdout|int != 0"
 
   - name: Upload image to glance
-    shell: "source {{ os_client_script }} && openstack image create {{ os_instance_name }} --file {{ os_image_file_path }}/{{ os_image_file_name }} --disk-format qcow2 --container-format bare"
+    shell: "source {{ os_client_script }} && openstack image create {{ os_image_name }} --file {{ os_image_file_path }}/{{ os_image_file_name }} --disk-format qcow2 --container-format bare"
     when: "os_image_glance_status.stdout|int == 0"
     args:
       executable: /bin/bash
 
   - name: Check upload status of image in glance
-    shell: "source {{ os_client_script }} && openstack image list -f value -c Name -c Status | grep -w {{ os_instance_name }} | awk '{ print $2 }'"
+    shell: "source {{ os_client_script }} && openstack image list -f value -c Name -c Status | grep -w '^{{ os_image_name }}' | awk '{ print $2 }'"
     register: os_image_status
     until: "'active' in os_image_status.stdout"
     retries: 10

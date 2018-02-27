@@ -17,4 +17,7 @@ wilson.rand.kiev.ua
 os_image_url=https://cloud-images.ubuntu.com/releases/17.10/release/ubuntu-17.10-server-cloudimg-amd64.img
 os_client_script=/home/rand/rand-openrc
 os_image_file_path=/home/rand/Downloads
+os_image_name=ubuntu-17.10
+os_flavor_name=ubuntu-17.10
+os_security_group_name=ubuntu-17.10
 os_instance_name=ubuntu-17.10
