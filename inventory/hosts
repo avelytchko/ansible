@@ -9,3 +9,12 @@ welch.rand.kiev.ua
 
 [backup]
 cate.rand.kiev.ua
+
+[openstack]
+wilson.rand.kiev.ua
+
+[openstack:vars]
+os_image_url=https://cloud-images.ubuntu.com/releases/17.10/release/ubuntu-17.10-server-cloudimg-amd64.img
+os_client_script=/home/rand/rand-openrc
+os_image_file_path=/home/rand/Downloads
+os_instance_name=ubuntu-17.10
