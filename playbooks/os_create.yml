@@ -5,4 +5,5 @@
       - { role: os-flavor }
       - { role: os-security-group }
       - { role: os-image }
+      - { role: os-keypair }
       - { role: os-server }
