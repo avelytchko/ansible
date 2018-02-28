@@ -1,0 +1,7 @@
+---
+  - hosts: openstack
+    gather_facts: no
+    roles:
+      - os-flavor
+    vars:
+      os_flavor_remove: True

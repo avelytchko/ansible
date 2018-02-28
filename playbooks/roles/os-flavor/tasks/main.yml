@@ -5,13 +5,21 @@
     args:
       executable: /bin/bash
 
-  - name: View flavor status
-    debug: msg="Flavor already exists. Skipping creation."
-    when: "os_flavor_status.stdout|int != 0"
+  - block:
+    - name: View flavor status
+      debug: msg="Flavor already exists. Skipping creation."
+      when: "os_flavor_status.stdout|int != 0"
 
-  - name: Create flavor
-    shell: "source {{ os_client_admin_script }} && openstack flavor create --vcpus {{ item.value.vcpus }} --ram {{ item.value.ram }} --disk {{ item.value.disk }} --swap {{ item.value.swap }} --public {{ os_flavor_name }}"
-    with_dict: "{{ os_flavor }}"
-    when: "os_flavor_status.stdout|int == 0"
+    - name: Create flavor
+      shell: "source {{ os_client_admin_script }} && openstack flavor create --vcpus {{ item.value.vcpus }} --ram {{ item.value.ram }} --disk {{ item.value.disk }} --swap {{ item.value.swap }} --public {{ os_flavor_name }}"
+      with_dict: "{{ os_flavor }}"
+      when: "os_flavor_status.stdout|int == 0"
+      args:
+        executable: /bin/bash
+    when: "os_flavor_remove|default(False)|bool == False"
+
+  - name: Delete flavor
+    shell: "source {{ os_client_admin_script }} && openstack flavor delete {{ os_flavor_name }}"
+    when: "os_flavor_status.stdout|int != 0 and os_flavor_remove|default(False)|bool == True"
     args:
       executable: /bin/bash

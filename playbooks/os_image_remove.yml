@@ -1,0 +1,7 @@
+---
+  - hosts: openstack
+    gather_facts: no
+    roles:
+      - os-image
+    vars:
+      os_image_remove: True

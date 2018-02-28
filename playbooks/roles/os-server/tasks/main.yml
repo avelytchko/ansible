@@ -1,63 +1,71 @@
 ---
-  - name: Check if image exists in Glance
-    shell: "source {{ os_client_project_script }} && openstack image list -f value -c Name | grep -w '^{{ os_image_name }}$' | wc -l"
-    register: os_image_glance_status
-    args:
-      executable: /bin/bash
-
-  - name: View image status in Glance
-    fail: msg="Image doesn't exists in Glance. Skipping server creation. Exiting."
-    when: "os_image_glance_status.stdout|int == 0"
-
-  - name: Check if security group exists
-    shell: "source {{ os_client_project_script }} && openstack security group list -f value -c Name | grep -w '^{{ os_security_group_name }}$' | wc -l"
-    register: os_security_group_status
-    args:
-      executable: /bin/bash
-
-  - name: View security group status
-    fail: msg="Security group doesn't exists. Skipping server creation. Exiting."
-    when: "os_security_group_status.stdout|int == 0"
-
-  - name: Check if flavor exists
-    shell: "source {{ os_client_project_script }} && openstack flavor list -f value -c Name | grep -w '^{{ os_flavor_name }}$' | wc -l"
-    register: os_flavor_status
-    args:
-      executable: /bin/bash
-
-  - name: View flavor status
-    fail: msg="Flavor doesn't exists. Skipping server creation. Exiting."
-    when: "os_flavor_status.stdout|int == 0"
-
-  - name: Check if server already exists
+  - name: Check if server already exists in Nova
     shell: "source {{ os_client_project_script }} && openstack server list -f value -c Name -c 'Image Name' | grep -w '^{{ os_instance_name }}' | grep -w '{{ os_image_name }}$' | wc -l"
     register: os_server_status
     args:
       executable: /bin/bash
 
-  - name: View server status
-    debug: msg="Server already exists. Skipping creation."
-    when: "os_server_status.stdout|int != 0"
+  - block:
+    - name: Check if image exists in Glance
+      shell: "source {{ os_client_project_script }} && openstack image list -f value -c Name | grep -w '^{{ os_image_name }}$' | wc -l"
+      register: os_image_glance_status
+      args:
+        executable: /bin/bash
 
-  - name: Create server in Nova
-    shell: "source {{ os_client_project_script }} && openstack server create --image {{ os_image_name }} --flavor {{ os_flavor_name }} --security-group {{ os_security_group_name }} {{ os_instance_name }}"
-    when: "os_server_status.stdout|int == 0"
+    - name: View image status in Glance
+      fail: msg="Image doesn't exists in Glance. Skipping server creation. Exiting."
+      when: "os_image_glance_status.stdout|int == 0"
+
+    - name: Check if security group exists
+      shell: "source {{ os_client_project_script }} && openstack security group list -f value -c Name | grep -w '^{{ os_security_group_name }}$' | wc -l"
+      register: os_security_group_status
+      args:
+        executable: /bin/bash
+
+    - name: View security group status
+      fail: msg="Security group doesn't exists. Skipping server creation. Exiting."
+      when: "os_security_group_status.stdout|int == 0"
+
+    - name: Check if flavor exists
+      shell: "source {{ os_client_project_script }} && openstack flavor list -f value -c Name | grep -w '^{{ os_flavor_name }}$' | wc -l"
+      register: os_flavor_status
+      args:
+        executable: /bin/bash
+
+    - name: View flavor status
+      fail: msg="Flavor doesn't exists. Skipping server creation. Exiting."
+      when: "os_flavor_status.stdout|int == 0"
+
+    - name: View server status in Nova
+      debug: msg="Server already exists. Skipping creation."
+      when: "os_server_status.stdout|int != 0"
+
+    - name: Create server in Nova
+      shell: "source {{ os_client_project_script }} && openstack server create --image {{ os_image_name }} --flavor {{ os_flavor_name }} --security-group {{ os_security_group_name }} {{ os_instance_name }} --key-name {{ os_key_name }}"
+      when: "os_server_status.stdout|int == 0"
+      args:
+        executable: /bin/bash
+
+    - name: Check status of server in Nova
+      shell: "source {{ os_client_project_script }} && openstack server list -f value -c Name -c Status | grep -w '^{{ os_instance_name }}' | awk '{ print $2 }'"
+      register: os_server_creating_status
+      until: "'ACTIVE' in os_server_creating_status.stdout"
+      retries: 10
+      args:
+        executable: /bin/bash
+
+    - name: Get IP of the server
+      shell: "source {{ os_client_project_script }} && openstack server list -f value -c Name -c Networks | grep -w '^{{ os_instance_name }}' | awk '{ print $2 }' | awk -F '=' '{ print $2 }'"
+      register: os_server_ip
+      args:
+        executable: /bin/bash
+
+    - name: View IP of the server
+      debug: msg="IP of the server is {{ os_server_ip.stdout }}"
+    when: "os_server_remove|default(False)|bool == False"
+
+  - name: Delete server from Nova
+    shell: "source {{ os_client_project_script }} && openstack server delete {{ os_instance_name }}"
+    when: "os_server_status.stdout|int != 0 and os_server_remove|default(False)|bool == True"
     args:
       executable: /bin/bash
-
-  - name: Check status of server in Nova
-    shell: "source {{ os_client_project_script }} && openstack server list -f value -c Name -c Status | grep -w '^{{ os_instance_name }}' | awk '{ print $2 }'"
-    register: os_server_creating_status
-    until: "'ACTIVE' in os_server_creating_status.stdout"
-    retries: 10
-    args:
-      executable: /bin/bash
-
-  - name: Get IP of the server
-    shell: "source {{ os_client_project_script }} && openstack server list -f value -c Name -c Networks | grep -w '^{{ os_instance_name }}' | awk '{ print $2 }' | awk -F '=' '{ print $2 }'"
-    register: os_server_ip
-    args:
-      executable: /bin/bash
-
-  - name: View IP of the server
-    debug: msg="IP of the server is {{ os_server_ip.stdout }}"

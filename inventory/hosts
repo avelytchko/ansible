@@ -19,6 +19,7 @@ os_client_project_script=/home/rand/rand-openrc
 os_client_admin_script=/home/rand/admin-openrc
 os_image_file_path=/home/rand/Downloads
 os_image_name=ubuntu-17.10
+os_key_name=key
 os_flavor_name=ubuntu-17.10
 os_flavor={"flavor": {"vcpus": "1", "ram": "8192", "disk": "20", "swap": "8192"} }
 os_instance_name=ubuntu-17.10
