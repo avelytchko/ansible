@@ -16,11 +16,6 @@
       get_checksum: no
     register: os_image_file_name_status
 
-  - name: Set fact for image file status
-    set_fact:
-      os_image_file_name_fact: "{{ os_image_file_name_status }}"
-      cacheable: false
-
   - block:
     - name: View image status in Glance
       debug: msg="Image file already exists in Glance. Skipping uploading."
@@ -32,13 +27,13 @@
 
     - name: View image file status
       debug: msg="Image file already exists in {{ os_image_file_path }}/{{ os_image_file_name }}. Skipping downloading."
-      when: "os_image_glance_status.stdout|int == 0 and os_image_file_name_fact.stat.exists != False"
+      when: "os_image_glance_status.stdout|int == 0 and os_image_file_name_status.stat.exists != False"
 
     - name: Download image for Glance
       get_url:
         url: "{{ os_image_url }}"
         dest: "{{ os_image_file_path }}"
-      when: "os_image_glance_status.stdout|int == 0 and os_image_file_name_fact.stat.exists == False"
+      when: "os_image_glance_status.stdout|int == 0 and os_image_file_name_status.stat.exists == False"
 
     - name: Upload image to Glance
       shell: "source {{ os_client_project_script }} && openstack image create {{ os_image_name }} --file {{ os_image_file_path }}/{{ os_image_file_name }} --disk-format qcow2 --container-format bare"
@@ -61,7 +56,7 @@
       file:
         path: "{{ os_image_file_path }}/{{ os_image_file_name }}"
         state: absent
-      when: "os_image_file_name_fact.stat.exists == True"
+      when: "os_image_file_name_status.stat.exists == True"
 
     - name: Delete image from Glance
       shell: "source {{ os_client_project_script }} && openstack image delete {{ os_image_name }}"
