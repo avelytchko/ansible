@@ -15,11 +15,13 @@ wilson.rand.kiev.ua
 
 [openstack:vars]
 os_image_url=https://cloud-images.ubuntu.com/releases/17.10/release/ubuntu-17.10-server-cloudimg-amd64.img
-os_client_script=/home/rand/rand-openrc
+os_client_project_script=/home/rand/rand-openrc
+os_client_admin_script=/home/rand/admin-openrc
 os_image_file_path=/home/rand/Downloads
 os_image_name=ubuntu-17.10
 os_flavor_name=ubuntu-17.10
-os_security_group_name=ubuntu-17.10
+os_flavor={"flavor1": {"vcpus": "1", "ram": "8192", "disk": "20", "swap": "8192"} }
 os_instance_name=ubuntu-17.10
+os_security_group_name=ubuntu-17.10
 os_security_group_rules={"rule1": {"proto": "tcp", "port": "2106"}, "rule2": {"proto": "tcp", "port": "9014"}, "rule3": {"proto": "tcp", "port": "7777"}, "rule4": {"proto": "tcp", "port": "22"} }
 

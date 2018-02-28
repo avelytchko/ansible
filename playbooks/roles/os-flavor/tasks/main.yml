@@ -1,0 +1,17 @@
+---
+  - name: Check if flavor already exists
+    shell: "source {{ os_client_admin_script }} && openstack flavor list -f value -c Name | grep -w '^{{ os_flavor_name }}$' | wc -l"
+    register: os_flavor_status
+    args:
+      executable: /bin/bash
+
+  - name: View flavor status
+    debug: msg="Flavor already exists. Skipping creation."
+    when: "os_flavor_status.stdout|int != 0"
+
+  - name: Create flavor
+    shell: "source {{ os_client_admin_script }} && openstack flavor create --vcpus {{ item.value.vcpus }} --ram {{ item.value.ram }} --disk {{ item.value.disk }} --swap {{ item.value.swap }} --public {{ os_flavor_name }}"
+    with_dict: "{{ os_flavor }}"
+    when: "os_flavor_status.stdout|int == 0"
+    args:
+      executable: /bin/bash

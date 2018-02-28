@@ -1,9 +1,6 @@
 ---
-   # - debug: msg="proto is {{ item.value.proto }} port is {{ item.value.port }}"
-   #   with_dict: "{{ os_security_group_rules }}"
-
   - name: Check if security group already exists
-    shell: "source {{ os_client_script }} && openstack security group list -f value -c Name | grep -w '^{{ os_security_group_name }}$' | wc -l"
+    shell: "source {{ os_client_project_script }} && openstack security group list -f value -c Name | grep -w '^{{ os_security_group_name }}$' | wc -l"
     register: os_security_group_status
     args:
       executable: /bin/bash
@@ -13,13 +10,13 @@
     when: "os_security_group_status.stdout|int != 0"
 
   - name: Create security group
-    shell: "source {{ os_client_script }} && openstack security group create {{ os_security_group_name }}"
+    shell: "source {{ os_client_project_script }} && openstack security group create {{ os_security_group_name }}"
     when: "os_security_group_status.stdout|int == 0"
     args:
       executable: /bin/bash
 
   - name: Create security group rule
-    shell: "source {{ os_client_script }} && openstack security group rule create {{ os_security_group_name }} --protocol {{ item.value.proto }} --dst-port {{ item.value.port }}:{{ item.value.port }}"
+    shell: "source {{ os_client_project_script }} && openstack security group rule create {{ os_security_group_name }} --protocol {{ item.value.proto }} --dst-port {{ item.value.port }}:{{ item.value.port }}"
     with_dict: "{{ os_security_group_rules }}"
     args:
       executable: /bin/bash
