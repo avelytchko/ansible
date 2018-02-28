@@ -1,0 +1,7 @@
+---
+  - hosts: openstack
+    gather_facts: no
+    roles:
+      - os-keypair
+    vars:
+      os_keypair_remove: True

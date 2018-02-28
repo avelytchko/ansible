@@ -3,6 +3,7 @@
     gather_facts: no
     roles:
       - { role: os-server, os_server_remove: True }
+      - { role: os-keypair, os_keypair_remove: True }
       - { role: os-image, os_image_remove: True }
       - { role: os-flavor, os_flavor_remove: True }
       - { role: os-security-group, os_security_group_remove: True }

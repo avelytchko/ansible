@@ -41,7 +41,7 @@
       when: "os_server_status.stdout|int != 0"
 
     - name: Create server in Nova
-      shell: "source {{ os_client_project_script }} && openstack server create --image {{ os_image_name }} --flavor {{ os_flavor_name }} --security-group {{ os_security_group_name }} {{ os_instance_name }} --key-name {{ os_key_name }}"
+      shell: "source {{ os_client_project_script }} && openstack server create --image {{ os_image_name }} --flavor {{ os_flavor_name }} --security-group {{ os_security_group_name }} --nic net-id={{ os_network_name }} --key-name {{ os_key_name }} {{ os_instance_name }}"
       when: "os_server_status.stdout|int == 0"
       args:
         executable: /bin/bash
