@@ -1,5 +1,5 @@
 ---
-  - name: Check if server already exists in Nova
+  - name: Check if server exists in Nova
     shell: "source {{ os_client_project_script }} && openstack server list -f value -c Name -c 'Image Name' | grep -w '^{{ os_instance_name }}' | grep -w '{{ os_image_name }}$' | wc -l"
     register: os_server_status
     args:

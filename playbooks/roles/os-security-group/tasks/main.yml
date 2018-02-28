@@ -1,5 +1,5 @@
 ---
-  - name: Check if security group already exists
+  - name: Check if security group exists
     shell: "source {{ os_client_project_script }} && openstack security group list -f value -c Name | grep -w '^{{ os_security_group_name }}$' | wc -l"
     register: os_security_group_status
     args:

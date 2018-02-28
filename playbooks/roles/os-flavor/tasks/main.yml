@@ -1,5 +1,5 @@
 ---
-  - name: Check if flavor already exists
+  - name: Check if flavor exists
     shell: "source {{ os_client_admin_script }} && openstack flavor list -f value -c Name | grep -w '^{{ os_flavor_name }}$' | wc -l"
     register: os_flavor_status
     args:

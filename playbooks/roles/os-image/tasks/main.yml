@@ -1,5 +1,5 @@
 ---
-  - name: Check if image alredy in Glance
+  - name: Check if image exists in Glance
     shell: "source {{ os_client_project_script }} && openstack image list -f value -c Name | grep -w '^{{ os_image_name }}$' | wc -l"
     register: os_image_glance_status
     args:
