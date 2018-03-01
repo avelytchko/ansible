@@ -17,7 +17,7 @@
         executable: /bin/bash
 
     - name: Create security group rule
-      shell: "source {{ os_client_project_script }} && openstack security group rule create {{ os_security_group_name }} --protocol {{ item.value.proto }} --dst-port {{ item.value.port }}:{{ item.value.port }}"
+      shell: "source {{ os_client_project_script }} && openstack security group rule create {{ os_security_group_name }} --protocol {{ item.value.proto }} {% if item.value.port is defined %}--dst-port {{ item.value.port }}:{{ item.value.port }} {% endif %}"
       with_dict: "{{ os_security_group_rules }}"
       when: "os_security_group_status.stdout|int == 0"
       args:
