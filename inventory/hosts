@@ -25,7 +25,7 @@ os_instance_name=ubuntu-17.10
 # do not use special characters for key_name
 os_key_name=ubuntu1710
 os_network_name=private
-os_network_type=selfservice
+os_network_type=provider
 os_security_group_name=ubuntu-17.10
 os_security_group_rules={"rule1": {"proto": "tcp", "port": "2106"}, "rule2": {"proto": "tcp", "port": "9014"}, "rule3": {"proto": "tcp", "port": "7777"}, "rule4": {"proto": "tcp", "port": "22"} }
 
