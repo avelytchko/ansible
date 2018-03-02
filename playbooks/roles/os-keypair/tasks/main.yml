@@ -6,6 +6,7 @@
       executable: /bin/bash
 
   - block:
+
     - name: Create private and public keys
       user:
         name: "{{ lookup('env','USER') }}"
@@ -27,6 +28,7 @@
       when: "os_keypair_status.stdout|int == 0"
       args:
         executable: /bin/bash
+
     when: "os_keypair_remove|default(False)|bool == False"
 
   - name: Delete keypair
