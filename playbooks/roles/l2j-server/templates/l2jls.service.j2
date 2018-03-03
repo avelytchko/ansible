@@ -1,6 +1,8 @@
 [Unit]
 Description=Starts and stops L2J login server
-Before=l2jls.service
+Requires=mysql.service
+Before=l2jgs.service
+After=mysql.service
 
 [Service]
 Type=simple

@@ -1,7 +1,8 @@
 [Unit]
 Description=Starts and stops L2J game server
+Requires=mysql.service
 Wants=l2jls.service
-After=l2jls.service
+After=l2jls.service mysql.service
 
 [Service]
 Type=simple
