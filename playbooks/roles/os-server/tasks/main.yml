@@ -134,6 +134,12 @@
       args:
         executable: /bin/bash
 
+    - name: Add security group to instance
+      shell: "source {{ os_client_project_script }} && openstack server add security group {{ os_instance_name }} {{ os_security_group_name }}"
+      when: "os_server_status.stdout|int == 0"
+      args:
+        executable: /bin/bash
+
     - name: Check status of server in Nova
       shell: "source {{ os_client_project_script }} && openstack server list -f value -c Name -c Status | grep -w '^{{ os_instance_name }}' | awk '{ print $2 }'"
       register: os_server_creating_status
@@ -167,19 +173,6 @@
         state: started
         delay: 10
         timeout: 300
-
-    - name: Scan fingerprint of instance
-      shell: "ssh-keyscan {{ os_instance_ip }}"
-      register: host_fingerprint
-
-    - name: Add fingerprint to known_hosts
-      lineinfile:
-        dest: "{{ lookup('env', 'HOME') }}/.ssh/known_hosts"
-        line: "{{ item }}"
-        create: yes
-        state: present
-        mode: 0600
-      with_items: "{{ host_fingerprint.stdout }}"
 
     when: "os_server_remove|default(False)|bool == False"
 
