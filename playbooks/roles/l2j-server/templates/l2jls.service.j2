@@ -9,7 +9,7 @@ Type=simple
 User=l2j
 Group=l2j
 WorkingDirectory={{ l2j_server_dir }}/server/login
-ExecStart=/usr/bin/java -Xms128m -Xmx256m -jar l2jlogin.jar >> logs/stdout.log 2>&1
+ExecStart=/bin/bash -c "/usr/bin/java -Xms128m -Xmx256m -jar l2jlogin.jar >> /var/log/l2j/l2jgs.log 2>&1"
 TimeoutStopSec=30
 
 [Install]
