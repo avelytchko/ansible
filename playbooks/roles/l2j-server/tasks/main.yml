@@ -125,6 +125,13 @@
         clone: yes
         update: yes
 
+    - name: Clone L2J Geodata from git
+      git:
+        repo: 'https://bitbucket.org/l2jgeo/l2j_geodata.git'
+        dest: "{{ l2j_server_dir }}/stage/l2j_geodata"
+        clone: yes
+        update: yes
+
     - name: Compile L2J Server Core
       shell: "./gradlew"
       args:
@@ -149,7 +156,7 @@
         patterns: 'L2J_DataPack_*.zip'
       register: l2j_datapack_file_name
 
-    - name: Copy compiled L2J Server Core file to working directory
+    - name: Copy compiled L2J Server Core file to server directory
       copy:
         src: "{{ item.path }}"
         dest: "{{ l2j_server_dir }}/server"
@@ -157,7 +164,7 @@
       with_items:
         - "{{ l2j_server_file_name.files }}"
 
-    - name: Copy compiled L2J Datapack file to working directory
+    - name: Copy compiled L2J Datapack file to server directory
       copy:
         src: "{{ item.path }}"
         dest: "{{ l2j_server_dir }}/server"
@@ -181,12 +188,11 @@
       with_items:
         - "{{ l2j_datapack_file_name.files }}"
 
-    - name: Clone L2J Geodata from git
-      git:
-        repo: 'https://bitbucket.org/l2jgeo/l2j_geodata.git'
+    - name: Copy L2J Geodata files to server directory
+      copy:
+        src: "{{ l2j_server_dir }}/stage/l2j_geodata/geodata"
         dest: "{{ l2j_server_dir }}/server/game/data"
-        clone: yes
-        update: yes
+        remote_src: yes
 
     - name: Remove temporary directory
       file:

@@ -18,9 +18,9 @@ wilson.rand.kiev.ua
 
 [l2j:vars]
 l2j_server_dir=/opt/l2j
-mysql_root_password=l1X0WX15rx6YDfjLPygT
-mysql_l2jgs_password=YD2zPC7A46sstZSze1kj
-mysql_l2jls_password=1jyLpmp1GvaQIinJ5rxk
+mysql_root_password=
+mysql_l2jgs_password=
+mysql_l2jls_password=
 
 [openstack:vars]
 os_image_url=https://cloud-images.ubuntu.com/releases/17.10/release/ubuntu-17.10-server-cloudimg-amd64.img
