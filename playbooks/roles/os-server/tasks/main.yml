@@ -160,13 +160,13 @@
       debug: msg="IP of the server is {{ os_server_ip.stdout }}"
 
     - name: Waiting for server to boot
-      wait_for:
+      local_action: wait_for
+      args:
         host: "{{ os_instance_ip }}"
         port: 22
         state: started
         delay: 10
         timeout: 300
-      delegate_to: localhost
 
     - name: Scan fingerprint of instance
       shell: "ssh-keyscan {{ os_instance_ip }}"
@@ -201,9 +201,3 @@
     args:
       executable: /bin/bash
 
-  - name: Remove fingerprint from known_hosts
-    known_hosts:
-      path: "{{ lookup('env','HOME') }}/.ssh/known_hosts"
-      name: "{{ os_instance_ip }}"
-      state: absent
-    when: "os_server_remove|default(False)|bool == True"

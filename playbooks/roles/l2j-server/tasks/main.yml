@@ -19,23 +19,23 @@
       when: apt_upgrade_status.changed
 
     - name: Waiting for server to shutdown
-      wait_for:
-        host: "{{ ansible_ssh_host }}"
+      local_action: wait_for
+      args:
+        host: "{{ inventory_hostname }}"
         port: 22
         state: stopped
-        delay: 30
         timeout: 300
       delegate_to: localhost
       when: apt_upgrade_status.changed
 
     - name: Waiting for server to boot
-      wait_for:
-        host: "{{ ansible_ssh_host }}"
+      local_action: wait_for
+      args:
+        host: "{{ inventory_hostname }}"
         port: 22
         state: started
         delay: 30
         timeout: 300
-      delegate_to: localhost
       when: apt_upgrade_status.changed
 
     - name: Install packages
@@ -298,6 +298,7 @@
       copy:
         src: "{{ l2j_server_dir }}/server/login/hexid.txt"
         dest: "{{ l2j_server_dir }}/server/game/config/"
+        remote_src: yes
 
     become: yes
     become_user: l2j
