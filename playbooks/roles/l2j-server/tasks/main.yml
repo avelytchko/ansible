@@ -11,7 +11,7 @@
       register: apt_upgrade_status
 
     - name: Reboot server for applying updates
-      shell: "shutdown -r +1 "Apply updates"
+      shell: "shutdown -r +1 'Apply updates'"
       register: reboot_status
       until: reboot_status.rc == 0
       retries: 6
@@ -42,7 +42,6 @@
         generate_ssh_key: yes
         ssh_key_bits: 2048
         ssh_key_file: .ssh/id_rsa
-        
 
     - name: Create working directories
       file:
@@ -78,7 +77,7 @@
         - l2jgs
         - l2jls
 
-    - name: Create L2J game server user
+    - name: Create L2J game server user in database
       mysql_user:
         login_user: root
         login_password: "{{ mysql_root_password }}"
@@ -92,7 +91,7 @@
         - "::1"
         - "localhost"
 
-    - name: Create L2J login server user
+    - name: Create L2J login server user in database
       mysql_user:
         login_user: root
         login_password: "{{ mysql_root_password }}"
@@ -185,7 +184,7 @@
     - name: Clone L2J Geodata from git
       git:
         repo: 'https://bitbucket.org/l2jgeo/l2j_geodata.git'
-        dest: "{{ l2j_server_dir }}/game/data"
+        dest: "{{ l2j_server_dir }}/server/game/data"
         clone: yes
         update: yes
 
@@ -256,11 +255,11 @@
         line: "{{ item.param }} = {{ item.value }}"
       with_items:
         - { file: '{{ l2j_server_dir }}/server/game/config/Server.properties', regexp: '^Password', param: 'Password', value: '{{ mysql_l2jgs_password }}' }
-        - { file: '{{ l2j_server_dir }}/server/game/config/Server.properties', regexp: '^Login', param: 'Login', value: 'l2jgs'  }
-        - { file: '{{ l2j_server_dir }}/server/game/config/Server.properties', regexp: '^EnableUPnP', param: 'EnableUPnP', value: 'False'  }
+        - { file: '{{ l2j_server_dir }}/server/game/config/Server.properties', regexp: '^Login', param: 'Login', value: 'l2jgs' }
+        - { file: '{{ l2j_server_dir }}/server/game/config/Server.properties', regexp: '^EnableUPnP', param: 'EnableUPnP', value: 'False' }
         - { file: '{{ l2j_server_dir }}/server/login/config/LoginServer.properties', regexp: '^Password', param: 'Password', value: '{{ mysql_l2jls_password }}' }
-        - { file: '{{ l2j_server_dir }}/server/login/config/LoginServer.properties', regexp: '^Login', param: 'Login', value: 'l2jls'  }
-        - { file: '{{ l2j_server_dir }}/server/login/config/LoginServer.properties', regexp: '^EnableUPnP', param: 'EnableUPnP', value: 'False'  }
+        - { file: '{{ l2j_server_dir }}/server/login/config/LoginServer.properties', regexp: '^Login', param: 'Login', value: 'l2jls' }
+        - { file: '{{ l2j_server_dir }}/server/login/config/LoginServer.properties', regexp: '^EnableUPnP', param: 'EnableUPnP', value: 'False' }
 
     - name: Register Game Server
       cmd: |
