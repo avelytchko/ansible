@@ -1,129 +1,129 @@
 ---
+  # - block:
+
+  #   - name: Install python
+  #     raw: "test -e /usr/bin/python || (apt -y update && apt install -y python-minimal)"
+
+  #   # - name: Upgrade packages and system
+  #   #   apt:
+  #   #     update_cache: yes
+  #   #     upgrade: yes
+  #   #   register: apt_upgrade_status
+
+  #   # - name: Reboot server for applying updates
+  #   #   shell: "shutdown -r +1 'Apply updates'"
+  #   #   register: reboot_status
+  #   #   until: reboot_status.rc == 0
+  #   #   retries: 6
+  #   #   delay: 10
+  #   #   when: apt_upgrade_status.changed
+
+  #   # - name: Waiting for server to reboot
+  #   #   local_action: wait_for host={{ ansible_ssh_host }} state=started
+
+  #   - name: Install packages
+  #     apt:
+  #       name: "{{ item }}"
+  #       state: latest
+  #     with_items:
+  #       - openjdk-8-jdk
+  #       - htop
+  #       - dstat 
+  #       - unzip
+  #       - git-core
+  #       - mysql-server
+  #       - python-mysqldb
+  #     register: apt_packages_install_status
+
+  #   - name: Create L2J server user
+  #     user:
+  #       name: l2j
+  #       shell: /bin/bash
+  #       generate_ssh_key: yes
+  #       ssh_key_bits: 2048
+  #       ssh_key_file: .ssh/id_rsa
+
+  #   - name: Create working directories
+  #     file:
+  #       path: "{{ l2j_server_dir }}/{{ item }}"
+  #       state: directory
+  #       owner: l2j
+  #       group: l2j
+  #     with_items:
+  #       - stage
+  #       - server
+
+  #   - name: Update mysql root password for all root accounts from local
+  #     mysql_user:
+  #       login_user: root
+  #       name: root
+  #       host: "{{ item }}"
+  #       password: "{{ mysql_root_password }}"
+  #       priv: '*.*:ALL,GRANT'
+  #     with_items:
+  #       - "{{ inventory_hostname }}"
+  #       - "127.0.0.1"
+  #       - "::1"
+  #       - "localhost"
+  #     when: apt_packages_install_status.changed
+
+  #   - name: Create L2J databases
+  #     mysql_db:
+  #       login_user: root
+  #       login_password: "{{ mysql_root_password }}"
+  #       name: "{{ item }}"
+  #       state: present
+  #     with_items:
+  #       - l2jgs
+  #       - l2jls
+
+  #   - name: Create L2J game server user in database
+  #     mysql_user:
+  #       login_user: root
+  #       login_password: "{{ mysql_root_password }}"
+  #       name: l2jgs
+  #       host: "{{ item }}"
+  #       password: "{{ mysql_l2jgs_password }}"
+  #       priv: 'l2jgs.*:ALL'
+  #     with_items:
+  #       - "{{ inventory_hostname }}"
+  #       - "127.0.0.1"
+  #       - "::1"
+  #       - "localhost"
+
+  #   - name: Create L2J login server user in database
+  #     mysql_user:
+  #       login_user: root
+  #       login_password: "{{ mysql_root_password }}"
+  #       name: l2jls
+  #       host: "{{ item }}"
+  #       password: "{{ mysql_l2jls_password }}"
+  #       priv: 'l2jls.*:ALL'
+  #     with_items:
+  #       - "{{ inventory_hostname }}"
+  #       - "127.0.0.1"
+  #       - "::1"
+  #       - "localhost"
+
+  #   become: yes
+  #   become_user: root
+  #   become_method: sudo
+
   - block:
 
-    - name: Install python
-      raw: "test -e /usr/bin/python || (apt -y update && apt install -y python-minimal)"
+  #   - name: Clone L2J Server Core source from git
+  #     git:
+  #       repo: 'https://bitbucket.org/l2jserver/l2j_server.git'
+  #       dest: "{{ l2j_server_dir }}/stage/l2j_server"
+  #       clone: yes
+  #       update: yes
 
-    - name: Upgrade packages and system
-      apt:
-        update_cache: yes
-        upgrade: yes
-      register: apt_upgrade_status
-
-    - name: Reboot server for applying updates
-      shell: "shutdown -r +1 'Apply updates'"
-      register: reboot_status
-      until: reboot_status.rc == 0
-      retries: 6
-      delay: 10
-      when: apt_upgrade_status.changed
-
-    - name: Waiting for server to reboot
-      local_action: wait_for host={{ ansible_ssh_host }} state=started
-
-    - name: Install packages
-      apt:
-        name: "{{ item }}"
-        state: latest
-      with_items:
-        - openjdk-8-jdk
-        - htop
-        - dstat 
-        - unzip
-        - git-core
-        - mysql-server
-        - python-mysqldb
-      register: apt_packages_install_status
-
-    - name: Create L2J server user
-      user:
-        name: l2j
-        shell: /bin/bash
-        generate_ssh_key: yes
-        ssh_key_bits: 2048
-        ssh_key_file: .ssh/id_rsa
-
-    - name: Create working directories
-      file:
-        path: "{{ l2j_server_dir }}/{{ item }}"
-        state: directory
-        owner: l2j
-        group: l2j
-      with_items:
-        - stage
-        - server
-
-    - name: Update mysql root password for all root accounts from local
-      mysql_user:
-        login_user: root
-        name: root
-        host: "{{ item }}"
-        password: "{{ mysql_root_password }}"
-        priv: '*.*:ALL,GRANT'
-      with_items:
-        - "{{ inventory_hostname }}"
-        - "127.0.0.1"
-        - "::1"
-        - "localhost"
-      when: apt_packages_install_status.changed
-
-    - name: Create L2J databases
-      mysql_db:
-        login_user: root
-        login_password: "{{ mysql_root_password }}"
-        name: "{{ item }}"
-        state: present
-      with_items:
-        - l2jgs
-        - l2jls
-
-    - name: Create L2J game server user in database
-      mysql_user:
-        login_user: root
-        login_password: "{{ mysql_root_password }}"
-        name: l2jgs
-        host: "{{ item }}"
-        password: "{{ mysql_l2jgs_password }}"
-        priv: 'l2jgs.*:ALL'
-      with_items:
-        - "{{ inventory_hostname }}"
-        - "127.0.0.1"
-        - "::1"
-        - "localhost"
-
-    - name: Create L2J login server user in database
-      mysql_user:
-        login_user: root
-        login_password: "{{ mysql_root_password }}"
-        name: l2jls
-        host: "{{ item }}"
-        password: "{{ mysql_l2jls_password }}"
-        priv: 'l2jls.*:ALL'
-      with_items:
-        - "{{ inventory_hostname }}"
-        - "127.0.0.1"
-        - "::1"
-        - "localhost"
-
-    become: yes
-    become_user: root
-    become_method: sudo
-
-  - block:
-
-    - name: Clone L2J Server Core source from git
-      git:
-        repo: 'https://bitbucket.org/l2jserver/l2j_server.git'
-        dest: "{{ l2j_server_dir }}/stage/l2j_server"
-        clone: yes
-        update: yes
-
-    - name: Clone L2J Datapack source from git
-      git:
-        repo: 'https://bitbucket.org/l2jserver/l2j_datapack.git'
-        dest: "{{ l2j_server_dir }}/stage/l2j_datapack"
-        clone: yes
-        update: yes
+  #   - name: Clone L2J Datapack source from git
+  #     git:
+  #       repo: 'https://bitbucket.org/l2jserver/l2j_datapack.git'
+  #       dest: "{{ l2j_server_dir }}/stage/l2j_datapack"
+  #       clone: yes
+  #       update: yes
 
     - name: Clone L2J Geodata from git
       git:
@@ -131,66 +131,67 @@
         dest: "{{ l2j_server_dir }}/stage/l2j_geodata"
         clone: yes
         update: yes
+        archive: "{{ l2j_server_dir }}/stage/l2j_geodata/l2j_geodata.zip"
 
-    - name: Compile L2J Server Core
-      shell: "./gradlew"
-      args:
-        chdir: "{{ l2j_server_dir }}/stage/l2j_server"
-        executable: /bin/bash
+  #   - name: Compile L2J Server Core
+  #     shell: "./gradlew"
+  #     args:
+  #       chdir: "{{ l2j_server_dir }}/stage/l2j_server"
+  #       executable: /bin/bash
 
-    - name: Compile L2J Datapack
-      shell: "./gradlew"
-      args:
-        chdir: "{{ l2j_server_dir }}/stage/l2j_datapack"
-        executable: /bin/bash
+  #   - name: Compile L2J Datapack
+  #     shell: "./gradlew"
+  #     args:
+  #       chdir: "{{ l2j_server_dir }}/stage/l2j_datapack"
+  #       executable: /bin/bash
 
-    - name: Get file name of compiled L2J Server Core
-      find:
-        paths: "{{ l2j_server_dir }}/stage/l2j_server/build/distributions"
-        patterns: 'L2J_Server_*.zip'
-      register: l2j_server_file_name
+  #   - name: Get file name of compiled L2J Server Core
+  #     find:
+  #       paths: "{{ l2j_server_dir }}/stage/l2j_server/build/distributions"
+  #       patterns: 'L2J_Server_*.zip'
+  #     register: l2j_server_file_name
 
-    - name: Get file name of compiled L2J Datapack
-      find:
-        paths: "{{ l2j_server_dir }}/stage/l2j_datapack/build/distributions"
-        patterns: 'L2J_DataPack_*.zip'
-      register: l2j_datapack_file_name
+  #   - name: Get file name of compiled L2J Datapack
+  #     find:
+  #       paths: "{{ l2j_server_dir }}/stage/l2j_datapack/build/distributions"
+  #       patterns: 'L2J_DataPack_*.zip'
+  #     register: l2j_datapack_file_name
 
-    - name: Copy compiled L2J Server Core file to server directory
-      copy:
-        src: "{{ item.path }}"
-        dest: "{{ l2j_server_dir }}/server"
-        remote_src: yes
-      with_items:
-        - "{{ l2j_server_file_name.files }}"
+  #   - name: Copy compiled L2J Server Core file to server directory
+  #     copy:
+  #       src: "{{ item.path }}"
+  #       dest: "{{ l2j_server_dir }}/server"
+  #       remote_src: yes
+  #     with_items:
+  #       - "{{ l2j_server_file_name.files }}"
 
-    - name: Copy compiled L2J Datapack file to server directory
-      copy:
-        src: "{{ item.path }}"
-        dest: "{{ l2j_server_dir }}/server"
-        remote_src: yes
-      with_items:
-        - "{{ l2j_datapack_file_name.files }}"
+  #   - name: Copy compiled L2J Datapack file to server directory
+  #     copy:
+  #       src: "{{ item.path }}"
+  #       dest: "{{ l2j_server_dir }}/server"
+  #       remote_src: yes
+  #     with_items:
+  #       - "{{ l2j_datapack_file_name.files }}"
 
-    - name: Unpack compiled L2J Server Core file
+  #   - name: Unpack compiled L2J Server Core file
+  #     unarchive:
+  #       src: "{{ item.path }}"
+  #       dest: "{{ l2j_server_dir }}/server"
+  #       remote_src: yes
+  #     with_items:
+  #       - "{{ l2j_server_file_name.files }}"
+
+  #   - name: Unpack compiled L2J Datapack file
+  #     unarchive:
+  #       src: "{{ item.path }}"
+  #       dest: "{{ l2j_server_dir }}/server"
+  #       remote_src: yes
+  #     with_items:
+  #       - "{{ l2j_datapack_file_name.files }}"
+
+    - name: Unpack L2J geodata files
       unarchive:
-        src: "{{ item.path }}"
-        dest: "{{ l2j_server_dir }}/server"
-        remote_src: yes
-      with_items:
-        - "{{ l2j_server_file_name.files }}"
-
-    - name: Unpack compiled L2J Datapack file
-      unarchive:
-        src: "{{ item.path }}"
-        dest: "{{ l2j_server_dir }}/server"
-        remote_src: yes
-      with_items:
-        - "{{ l2j_datapack_file_name.files }}"
-
-    - name: Copy L2J Geodata files to server directory
-      copy:
-        src: "{{ l2j_server_dir }}/stage/l2j_geodata/geodata"
+        src: "{{ l2j_server_dir }}/stage/l2j_geodata/l2j_geodata.zip"
         dest: "{{ l2j_server_dir }}/server/game/data"
         remote_src: yes
 
