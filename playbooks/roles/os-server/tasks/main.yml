@@ -181,4 +181,3 @@
     when: "os_provider_port_status.stdout|int != 0 and os_server_remove|default(False)|bool == True and os_network_type == 'provider'"
     args:
       executable: /bin/bash
-
