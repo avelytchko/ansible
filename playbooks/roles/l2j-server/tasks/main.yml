@@ -48,17 +48,15 @@
         path: "{{ l2j_server_dir }}/{{ item }}"
         state: directory
         owner: l2j
-        group: l2j
       with_items:
         - stage
         - server
 
-    - name: Create server logs directories
+    - name: Create l2j server logs directories
       file:
         path: "/var/log/l2j"
         state: directory
         owner: l2j
-        group: l2j
 
     - name: Update mysql root password for all root accounts from local
       mysql_user:
