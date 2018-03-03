@@ -1,0 +1,14 @@
+[Unit]
+Description=Starts and stops L2J login server
+Before=l2jls.service
+
+[Service]
+Type=simple
+User=l2j
+Group=l2j
+WorkingDirectory={{ l2j_server_dir }}/server/login
+ExecStart=/usr/bin/java -Xms128m -Xmx256m -jar l2jlogin.jar >> logs/stdout.log 2>&1
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target
