@@ -3,4 +3,3 @@
     gather_facts: no
     roles:
       - { role: host-key }
-      - { role: l2j-server }

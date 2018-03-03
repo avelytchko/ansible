@@ -37,14 +37,6 @@
     args:
       executable: /bin/bash
 
-  - name: Remove fingerprint
-    known_hosts:
-      path: "{{ lookup('env','HOME') }}/.ssh/known_hosts"
-      hash_host: yes
-      name: "{{ os_instance_ip }}"
-      state: absent
-    when: "os_keypair_remove|default(False)|bool == True"
-
   - name: Remove keys
     file:
       path: "{{ item }}"

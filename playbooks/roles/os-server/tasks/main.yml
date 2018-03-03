@@ -160,7 +160,26 @@
       debug: msg="IP of the server is {{ os_server_ip.stdout }}"
 
     - name: Waiting for server to boot
-      local_action: wait_for host={{ os_instance_ip }} state=started
+      wait_for:
+        host: "{{ os_instance_ip }}"
+        port: 22
+        state: started
+        delay: 10
+        timeout: 300
+      delegate_to: localhost
+
+    - name: Scan fingerprint of instance
+      shell: "ssh-keyscan {{ os_instance_ip }}"
+      register: host_fingerprint
+
+    - name: Add fingerprint to known_hosts
+      lineinfile:
+        dest: "{{ lookup('env', 'HOME') }}/.ssh/known_hosts"
+        line: "{{ item }}"
+        create: yes
+        state: present
+        mode: 0600
+      with_items: "{{ host_fingerprint.stdout }}"
 
     when: "os_server_remove|default(False)|bool == False"
 
@@ -181,3 +200,10 @@
     when: "os_provider_port_status.stdout|int != 0 and os_server_remove|default(False)|bool == True and os_network_type == 'provider'"
     args:
       executable: /bin/bash
+
+  - name: Remove fingerprint from known_hosts
+    known_hosts:
+      path: "{{ lookup('env','HOME') }}/.ssh/known_hosts"
+      name: "{{ os_instance_ip }}"
+      state: absent
+    when: "os_server_remove|default(False)|bool == True"
