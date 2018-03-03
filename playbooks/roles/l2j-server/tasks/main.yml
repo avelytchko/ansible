@@ -262,12 +262,13 @@
         - { file: '{{ l2j_server_dir }}/server/login/config/LoginServer.properties', regexp: '^EnableUPnP', param: 'EnableUPnP', value: 'False' }
 
     - name: Register Game Server
-      cmd: |
-        ./RegisterGameServer.sh << EOF
-        1
-        1
-        5
-        EOF
+      shell:
+        cmd: |
+          ./RegisterGameServer.sh << EOF
+          1
+          1
+          5
+          EOF
       args:
         chdir: "{{ l2j_server_dir }}/server/login"
         executable: /bin/bash
