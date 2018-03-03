@@ -2,7 +2,7 @@
   - block:
 
     - name: Install python
-      raw: "test -e /usr/bin/python || (apt -y update && apt install -y python-minimal)"
+      raw: "test -e /usr/bin/python || (apt-get install -y python)"
 
     - name: Upgrade packages and system
       apt:
@@ -18,7 +18,17 @@
       delay: 10
       when: apt_upgrade_status.changed
 
-    - name: Waiting for server to reboot
+    - name: Waiting for server to shutdown
+      wait_for:
+        host: "{{ ansible_ssh_host }}"
+        port: 22
+        state: stopped
+        delay: 30
+        timeout: 300
+      delegate_to: localhost
+      when: apt_upgrade_status.changed
+
+    - name: Waiting for server to boot
       wait_for:
         host: "{{ ansible_ssh_host }}"
         port: 22
