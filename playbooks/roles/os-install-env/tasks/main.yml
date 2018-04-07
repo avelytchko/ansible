@@ -111,7 +111,7 @@
 - name: Add user openstack to RabbitMQ
   rabbitmq_user:
     user: openstack
-    password: "{{ os_env_rabbitmq_openstacl_password }}"
+    password: "{{ os_env_rabbitmq_openstack_password }}"
     permissions:
       - vhost: /
         configure_priv: .*
