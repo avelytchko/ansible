@@ -1,0 +1,64 @@
+---
+- name: Create database keystone
+  mysql_db:
+    login_user: root
+    name: keystone
+    state: present
+
+- name: Grant all privileges on keystone db to user keystone
+  mysql_user:
+    login_user: root
+    name: keystone
+    host: "{{ item }}"
+    password: "{{ os_keystone_mysql_password }}"
+    priv: 'keystone.*:ALL'
+    state: present
+  with_items:
+    - "localhost"
+    - "%"
+
+- name: Install keystone
+  apt:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - keystone
+    - apache2
+    - libapache2-mod-wsgi
+
+- name: Populate keystone.conf config file
+  ini_file:
+    path: "{{ item.path }}"
+    section: "{{ item.section }}"
+    option: "{{ item.option }}"
+    value: "{{ item.value }}"
+  with_items:
+    - { path: "/etc/keystone/keystone.conf", section: "database", option: "connection", value: "mysql+pymysql://keystone:{{ os_keystone_mysql_password }}@controller/keystone" }
+    - { path: "/etc/keystone/keystone.conf", section: "token", option: "provider", value: "fernet" }
+  
+- name: Populate the Identity service database
+  become: true
+  become_user: keystone
+  shell: "keystone-manage db_sync"
+
+- name: Initialize Fernet key repositories
+  shell: "{{ item }}"
+  with_items:
+    - "keystone-manage fernet_setup --keystone-user keystone --keystone-group keystone"
+    - "keystone-manage credential_setup --keystone-user keystone --keystone-group keystone"
+
+- name: Bootstrap the Identity service
+  shell: "keystone-manage bootstrap --bootstrap-password {{ os_keystone_admin_password }} --bootstrap-admin-url http://controller:35357/v3/ --bootstrap-internal-url http://controller:5000/v3/ --bootstrap-public-url http://controller:5000/v3/ --bootstrap-region-id RegionOne"
+
+- name: Populate apache2.conf config file
+  lineinfile:
+    path: /etc/apache2/apache2.conf
+    regexp: '^ServerName'
+    line: 'ServerName controller'
+  register: apache2_conf_file_status
+
+- name: Restart apache2
+  service:
+    name: apache2
+    state: restarted
+  when: apache2_conf_file_status.changed
