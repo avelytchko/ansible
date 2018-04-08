@@ -63,11 +63,14 @@
     state: restarted
   when: apache2_conf_file_status.changed
 
-- name: Populate and place on home dir the admin-openrc file
+- name: Populate and place on home dir the client env scripts
   template:
-    src: admin-openrc.j2
-    dest: "{{ lookup('env','HOME') }}/admin-openrc"
+    src: "{{ item.template_name }}"
+    dest: "{{ lookup('env','HOME') }}/{{ item.file_name }}"
     mode: 0644
+  with_items:
+    - { template_name: "admin-openrc.j2", file_name: "admin-openrc" }
+    - { template_name: "demo-openrc.j2", file_name: "{{ os_keystone_demo_user }}-openrc" }
 
 - name: Install python-shade for os ansible module
   apt:
