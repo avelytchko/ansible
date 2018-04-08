@@ -62,3 +62,39 @@
     name: apache2
     state: restarted
   when: apache2_conf_file_status.changed
+
+- name: Populate and place on home dir the admin-openrc file
+  template:
+    src: admin-openrc.j2
+    dest: "{{ lookup('env','HOME') }}/admin-openrc"
+    mode: 0644
+
+- name: Install python-shade for os ansible module
+  apt:
+    name: python-shade
+    state: present
+
+- name: Create service project
+  os_project:
+    name: service
+    state: present
+    description: "Service Project"
+
+- name: Create {{ os_keystone_demo_user }} project
+  os_project:
+    name: "{{ os_keystone_demo_user }}"
+    state: present
+    description: "{{ os_keystone_demo_user|title }} Project"
+
+- name: Create {{ os_keystone_demo_user }} user
+  os_user:
+    name: "{{ os_keystone_demo_user }}"
+    password: "{{ os_keystone_demo_password }}"
+    domain: default
+    state: present
+
+- name: Create user role and add {{ os_keystone_demo_user }} to role
+  os_user_role:
+    role: user
+    user: "{{ os_keystone_demo_user }}"
+    project: "{{ os_keystone_demo_user }}"
