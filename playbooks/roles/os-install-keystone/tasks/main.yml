@@ -35,11 +35,13 @@
   with_items:
     - { path: "/etc/keystone/keystone.conf", section: "database", option: "connection", value: "mysql+pymysql://keystone:{{ os_keystone_mysql_password }}@controller/keystone" }
     - { path: "/etc/keystone/keystone.conf", section: "token", option: "provider", value: "fernet" }
+  register: keystone_conf_file_status
   
 - name: Populate the Identity service database
   become: true
   become_user: keystone
   shell: "keystone-manage db_sync"
+  when: keystone_conf_file_status.changed
 
 - name: Initialize Fernet key repositories
   shell: "{{ item }}"

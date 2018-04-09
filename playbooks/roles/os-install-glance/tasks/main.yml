@@ -1,0 +1,113 @@
+---
+- name: Create database glance
+  mysql_db:
+    login_user: root
+    name: glance
+    state: present
+
+- name: Grant all privileges on glance db to user glance
+  mysql_user:
+    login_user: root
+    name: glance
+    host: "{{ item }}"
+    password: "{{ os_glance_mysql_password }}"
+    priv: 'glance.*:ALL'
+    state: present
+  with_items:
+    - "localhost"
+    - "%"
+
+- name: Make sure installed python shade library is 1.11.0
+  pip:
+    name: shade
+    # state: latest
+    version: 1.11.0
+
+- name: Create the glance user
+  os_user:
+    name: glance
+    password: "{{ os_glance_password }}"
+    domain: default
+    state: present
+
+- name: Add the admin role to the glance user and service project
+  os_user_role:
+    role: admin
+    user: glance
+    project: service
+
+- name: Create the glance service entity
+  os_keystone_service:
+    name: glance
+    service_type: image
+    description: "OpenStack Image"
+    state: present
+
+- name: Create the Image service API endpoints
+  os_keystone_endpoint:
+    service: glance
+    endpoint_interface: "{{ item.endpoint_interface }}"
+    url: http://controller:9292
+    region: RegionOne
+    state: present
+  with_items:
+    - { endpoint_interface: public }
+    - { endpoint_interface: internal }
+    - { endpoint_interface: admin }
+
+- name: Install glance
+  apt:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - glance
+
+- name: Populate glance config files
+  ini_file:
+    path: "{{ item.path }}"
+    section: "{{ item.section }}"
+    option: "{{ item.option }}"
+    value: "{{ item.value }}"
+  with_items:
+    - { path: "/etc/glance/glance-api.conf", section: "database", option: "connection", value: "mysql+pymysql://glance:{{ os_glance_mysql_password }}@controller/glance" }
+    - { path: "/etc/glance/glance-api.conf", section: "keystone_authtoken", option: "auth_uri", value: "http://controller:5000" }
+    - { path: "/etc/glance/glance-api.conf", section: "keystone_authtoken", option: "auth_url", value: "http://controller:35357" }
+    - { path: "/etc/glance/glance-api.conf", section: "keystone_authtoken", option: "memcached_servers", value: "controller:11211" }
+    - { path: "/etc/glance/glance-api.conf", section: "keystone_authtoken", option: "auth_type", value: "password" }
+    - { path: "/etc/glance/glance-api.conf", section: "keystone_authtoken", option: "project_domain_name", value: "default" }
+    - { path: "/etc/glance/glance-api.conf", section: "keystone_authtoken", option: "user_domain_name", value: "default" }
+    - { path: "/etc/glance/glance-api.conf", section: "keystone_authtoken", option: "project_name", value: "service" }
+    - { path: "/etc/glance/glance-api.conf", section: "keystone_authtoken", option: "username", value: "glance" }
+    - { path: "/etc/glance/glance-api.conf", section: "keystone_authtoken", option: "password", value: "{{ os_glance_password }}" }
+    - { path: "/etc/glance/glance-api.conf", section: "paste_deploy", option: "flavor", value: "keystone" }
+    - { path: "/etc/glance/glance-api.conf", section: "glance_store", option: "stores", value: "file,http" }
+    - { path: "/etc/glance/glance-api.conf", section: "glance_store", option: "default_store", value: "file" }
+    - { path: "/etc/glance/glance-api.conf", section: "glance_store", option: "filesystem_store_datadir", value: "/var/lib/glance/images/" }
+    - { path: "/etc/glance/glance-registry.conf", section: "database", option: "connection", value: "mysql+pymysql://glance:{{ os_glance_mysql_password }}@controller/glance" }
+    - { path: "/etc/glance/glance-registry.conf", section: "database", option: "connection", value: "mysql+pymysql://glance:{{ os_glance_mysql_password }}@controller/glance" }
+    - { path: "/etc/glance/glance-registry.conf", section: "keystone_authtoken", option: "auth_uri", value: "http://controller:5000" }
+    - { path: "/etc/glance/glance-registry.conf", section: "keystone_authtoken", option: "auth_url", value: "http://controller:35357" }
+    - { path: "/etc/glance/glance-registry.conf", section: "keystone_authtoken", option: "memcached_servers", value: "controller:11211" }
+    - { path: "/etc/glance/glance-registry.conf", section: "keystone_authtoken", option: "auth_type", value: "password" }
+    - { path: "/etc/glance/glance-registry.conf", section: "keystone_authtoken", option: "project_domain_name", value: "default" }
+    - { path: "/etc/glance/glance-registry.conf", section: "keystone_authtoken", option: "user_domain_name", value: "default" }
+    - { path: "/etc/glance/glance-registry.conf", section: "keystone_authtoken", option: "project_name", value: "service" }
+    - { path: "/etc/glance/glance-registry.conf", section: "keystone_authtoken", option: "username", value: "glance" }
+    - { path: "/etc/glance/glance-registry.conf", section: "keystone_authtoken", option: "password", value: "{{ os_glance_password }}" }
+    - { path: "/etc/glance/glance-registry.conf", section: "paste_deploy", option: "flavor", value: "keystone" }
+  register: glance_conf_files_status
+
+- name: Populate the Image service database
+  become: true
+  become_user: glance
+  shell: "glance-manage db_sync"
+  when: glance_conf_files_status.changed
+
+- name: Restart the Image services
+  service:
+    name: "{{ item }}"
+    state: restarted
+  with_items:
+    - glance-registry
+    - glance-api
+  when: glance_conf_files_status.changed

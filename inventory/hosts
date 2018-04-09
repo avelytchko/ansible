@@ -47,3 +47,5 @@ os_keystone_mysql_password=MJ9ylGozqnbWxKc0n3Ff
 os_keystone_admin_password=JNZ2pSKSl0AmsR80Ut9O
 os_keystone_demo_user=demo
 os_keystone_demo_password=s1sgWjuBdRvAJFt5S9QG
+os_glance_mysql_password=YRhWDn4ErUlplarzTZve
+os_glance_password=jU0SyY9Zd8oCl2IZqm7E
