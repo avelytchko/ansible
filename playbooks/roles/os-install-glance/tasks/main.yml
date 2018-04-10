@@ -55,7 +55,7 @@
     - { endpoint_interface: internal }
     - { endpoint_interface: admin }
 
-- name: Install glance
+- name: Install glance packages
   apt:
     name: "{{ item }}"
     state: present
