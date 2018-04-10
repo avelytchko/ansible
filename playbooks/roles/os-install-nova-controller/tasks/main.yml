@@ -165,7 +165,7 @@
     become_user: nova
     shell: "nova-manage db sync"
 
-  - name: Restart the Image services
+  - name: Restart the Compute services
     service:
       name: "{{ item }}"
       state: restarted
