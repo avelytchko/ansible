@@ -133,6 +133,7 @@
     - { section: "placement", option: "auth_url", value: "http://controller:35357/v3" }
     - { section: "placement", option: "username", value: "placement" }
     - { section: "placement", option: "password", value: "{{ os_placement_password }}" }
+    - { section: "scheduler", option: "discover_hosts_in_cells_interval", value: "300" }
   register: nova_conf_file_status
 
 - name: Due to a packaging bug, remove the log_dir option
