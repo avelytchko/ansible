@@ -29,6 +29,11 @@
       debug: msg="Image file already exists in {{ os_image_file_path }}/{{ os_image_file_name }}. Skipping downloading."
       when: "os_image_glance_status.stdout|int == 0 and os_image_file_name_status.stat.exists != False"
 
+    - name: Create directory for storing image
+      file:
+        path: "{{ os_image_file_path }}"
+        state: directory
+
     - name: Download image for Glance
       get_url:
         url: "{{ os_image_url }}"
