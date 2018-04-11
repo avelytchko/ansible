@@ -141,7 +141,7 @@
   lineinfile:
     path: /etc/memcached.conf
     regexp: '^-l 127.0.0.1$'
-    line: "-l {{ ansible_ssh_host }}"
+    line: "-l 127.0.0.1,{{ ansible_ssh_host }}"
     backrefs: yes
   register: memcached_conf_update_status
 
