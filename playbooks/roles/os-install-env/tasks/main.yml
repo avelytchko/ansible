@@ -23,6 +23,7 @@
   lineinfile:
     path: /etc/chrony.conf
     line: "{{ item }} iburst"
+    create: yes
   with_items:
     - "0.ua.pool.ntp.org"
     - "1.ua.pool.ntp.org"
@@ -35,9 +36,17 @@
     enabled: yes
   when: apt_chrony_package_install_status.changed
 
-- name: Install software-properties-common
+- name: Install software-properties-common and aptitude
   apt:
-    name: software-properties-common
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - software-properties-common
+    - aptitude
+
+- name: Install ubuntu cloud keyring
+  apt:
+    pkg: ubuntu-cloud-keyring
     state: present
 
 - name: Add pike repository
