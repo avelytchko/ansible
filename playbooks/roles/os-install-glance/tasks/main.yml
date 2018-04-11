@@ -20,8 +20,8 @@
 - name: Make sure installed python shade library is 1.11.0
   pip:
     name: shade
-    # state: latest
     version: 1.11.0
+    state: present
 
 - name: Create the glance user
   os_user:

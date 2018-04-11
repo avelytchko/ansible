@@ -74,20 +74,28 @@
     - { template_name: "admin-openrc.j2", file_name: "admin-openrc" }
     - { template_name: "demo-openrc.j2", file_name: "{{ os_keystone_demo_user }}-openrc" }
 
-- name: Install python-shade for os ansible module
+- name: Install python pip
   apt:
-    name: python-shade
+    name: python-pip
+    state: present
+
+- name: Install python-shade for os ansible module
+  pip:
+    name: shade
+    version: 1.11.0
     state: present
 
 - name: Create service project
   os_project:
     name: service
+    domain_id: default
     state: present
     description: "Service Project"
 
 - name: Create {{ os_keystone_demo_user }} project
   os_project:
     name: "{{ os_keystone_demo_user }}"
+    domain_id: default
     state: present
     description: "{{ os_keystone_demo_user|title }} Project"
 
@@ -98,7 +106,12 @@
     domain: default
     state: present
 
-- name: Create user role and add {{ os_keystone_demo_user }} to role
+- name: Create user role
+  os_keystone_role:
+    name: user
+    state: present
+
+- name: Add {{ os_keystone_demo_user }} to role user
   os_user_role:
     role: user
     user: "{{ os_keystone_demo_user }}"
