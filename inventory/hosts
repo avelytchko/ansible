@@ -24,7 +24,7 @@ mysql_l2jls_password=
 
 [openstack:vars]
 os_image_url=https://cloud-images.ubuntu.com/releases/17.10/release/ubuntu-17.10-server-cloudimg-amd64.img
-os_client_project_script=/home/rand/rand-openrc
+os_client_project_script=/home/rand/demo-openrc
 os_client_admin_script=/home/rand/admin-openrc
 os_flavor_name=ubuntu-17.10
 os_flavor={"flavor1": {"vcpus": "1", "ram": "8192", "disk": "20", "swap": "8192"} }
@@ -33,7 +33,7 @@ os_image_name=ubuntu-17.10
 os_instance_name=ubuntu-17.10
 # do not use special characters for key_name
 os_key_name=ubuntu1710
-os_provider_network_name=private
+os_provider_network_name=public
 os_selfservice_network_name=internal
 # allowed values are 'provider' and 'selfservice'
 os_network_type=selfservice
@@ -52,3 +52,8 @@ os_glance_password=jU0SyY9Zd8oCl2IZqm7E
 os_nova_mysql_password=XZdBIbQpnKSgUr7kPNBx
 os_nova_password=45X1sWCSxObTm5cErMYy
 os_placement_password=79Pljh0ilWxtfButooqm
+os_neutron_mysql_password=pHtq8Vzj7w4DfRhhRdgK
+os_neutron_password=ojGnAgugrwAYxzkzo6jp
+os_neutron_provider_interface_name=enp0s31f6
+os_neutron_provider_network_name=public
+os_neutron_metadata_secret=c9tRwXJ4ZSrwbWNCeAXZ
