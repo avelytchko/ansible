@@ -40,6 +40,7 @@
 - name: Create the Networking API endpoints
   os_keystone_endpoint:
     service: neutron
+    service_type: network
     endpoint_interface: "{{ item.endpoint_interface }}"
     url: http://controller:9696
     region: RegionOne
@@ -74,7 +75,6 @@
     - { path: "/etc/neutron/neutron.conf", section: "DEFAULT", option: "allow_overlapping_ips", value: "true" }
     - { path: "/etc/neutron/neutron.conf", section: "DEFAULT", option: "transport_url", value: "rabbit://openstack:{{ os_env_rabbitmq_openstack_password }}@controller" }
     - { path: "/etc/neutron/neutron.conf", section: "DEFAULT", option: "auth_strategy", value: "keystone" }
-
     - { path: "/etc/neutron/neutron.conf", section: "keystone_authtoken", option: "auth_uri", value: "http://controller:5000" }
     - { path: "/etc/neutron/neutron.conf", section: "keystone_authtoken", option: "auth_url", value: "http://controller:35357" }
     - { path: "/etc/neutron/neutron.conf", section: "keystone_authtoken", option: "memcached_servers", value: "controller:11211" }
@@ -84,10 +84,8 @@
     - { path: "/etc/neutron/neutron.conf", section: "keystone_authtoken", option: "project_name", value: "service" }
     - { path: "/etc/neutron/neutron.conf", section: "keystone_authtoken", option: "username", value: "neutron" }
     - { path: "/etc/neutron/neutron.conf", section: "keystone_authtoken", option: "password", value: "{{ os_neutron_password }}" }
-
     - { path: "/etc/neutron/neutron.conf", section: "DEFAULT", option: "notify_nova_on_port_status_changes", value: "true" }
     - { path: "/etc/neutron/neutron.conf", section: "DEFAULT", option: "notify_nova_on_port_data_changes", value: "true" }
-
     - { path: "/etc/neutron/neutron.conf", section: "nova", option: "auth_url", value: "http://controller:35357" }
     - { path: "/etc/neutron/neutron.conf", section: "nova", option: "auth_type", value: "password" }
     - { path: "/etc/neutron/neutron.conf", section: "nova", option: "project_domain_name", value: "default" }
@@ -152,6 +150,3 @@
         - neutron-l3-agent
 
   when: neutron_conf_files_status.changed
-
-
-

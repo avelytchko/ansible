@@ -1,0 +1,5 @@
+---
+- name: Install dashboard package
+  apt:
+    name: openstack-dashboard
+    state: present
