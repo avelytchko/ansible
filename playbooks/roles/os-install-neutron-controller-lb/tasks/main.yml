@@ -40,7 +40,6 @@
 - name: Create the Networking API endpoints
   os_keystone_endpoint:
     service: neutron
-    service_type: network
     endpoint_interface: "{{ item.endpoint_interface }}"
     url: http://controller:9696
     region: RegionOne
