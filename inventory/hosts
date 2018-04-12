@@ -57,3 +57,5 @@ os_neutron_password=ojGnAgugrwAYxzkzo6jp
 os_neutron_provider_interface_name=enp0s31f6
 os_neutron_provider_network_name=public
 os_neutron_metadata_secret=c9tRwXJ4ZSrwbWNCeAXZ
+os_cinder_mysql_password=qogLOo7Ux0FRIbgSzeW1
+os_cinder_password=pt2w7nYcPEhoHdt6w2X2
