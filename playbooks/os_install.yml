@@ -18,5 +18,6 @@
       - { role: os-install-nova-compute }
       - { role: os-install-neutron-controller-lb }
       - { role: os-install-neutron-compute-lb }
-      - { role: os-install-dashboard }
       - { role: os-install-cinder-controller }
+      - { role: os-install-cinder-storage }
+      - { role: os-install-dashboard }
