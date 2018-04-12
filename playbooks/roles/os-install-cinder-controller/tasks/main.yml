@@ -8,7 +8,7 @@
 - name: Grant proper access to the cinder database
   mysql_user:
     login_user: root
-    name: glance
+    name: cinder
     host: "{{ item }}"
     password: "{{ os_cinder_mysql_password }}"
     priv: 'cinder.*:ALL'
@@ -44,7 +44,7 @@
   os_keystone_endpoint:
     service: cinderv2
     endpoint_interface: "{{ item.endpoint_interface }}"
-    url: "http://controller:8776/v2/%\(project_id\)s"
+    url: "http://controller:8776/v2/%(project_id)s"
     region: RegionOne
     state: present
   with_items:
@@ -56,7 +56,7 @@
   os_keystone_endpoint:
     service: cinderv3
     endpoint_interface: "{{ item.endpoint_interface }}"
-    url: "http://controller:8776/v3/%\(project_id\)s"
+    url: "http://controller:8776/v3/%(project_id)s"
     region: RegionOne
     state: present
   with_items:
@@ -81,6 +81,7 @@
   with_items:
     - { section: "database", option: "connection", value: "mysql+pymysql://cinder:{{ os_cinder_mysql_password }}@controller/cinder" }
     - { section: "DEFAULT", option: "transport_url", value: "rabbit://openstack:{{ os_env_rabbitmq_openstack_password }}@controller" }
+    - { section: "DEFAULT", option: "auth_strategy", value: "keystone" }
     - { section: "keystone_authtoken", option: "auth_uri", value: "http://controller:5000" }
     - { section: "keystone_authtoken", option: "auth_url", value: "http://controller:35357" }
     - { section: "keystone_authtoken", option: "memcached_servers", value: "controller:11211" }
@@ -110,7 +111,7 @@
     - { section: "cinder", option: "os_region_name", value: "RegionOne" }
   register: nova_cinder_conf_file_status
 
-- name: Restart the Compute API service, Block Storage and Apache services
+- name: Restart the Compute API, Block Storage and Apache services
   service:
     name: "{{ item }}"
     state: restarted
