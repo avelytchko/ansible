@@ -57,4 +57,3 @@
   with_items:
     - tgt
     - cinder-volume
-  when: lvm_conf_update_status.changed or cinder_conf_update_status.changed

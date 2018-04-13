@@ -34,7 +34,6 @@
     name: chrony
     state: restarted
     enabled: yes
-  when: apt_chrony_package_install_status.changed
 
 - name: Install software-properties-common and aptitude
   apt:
@@ -84,7 +83,6 @@
   service:
     name: mysql
     state: restarted
-  when: apt_mariadb_package_install_status.changed
 
 - name: Update mysql root password for all root accounts from local
   mysql_user:
@@ -149,7 +147,6 @@
   service:
     name: memcached
     state: restarted
-  when: memcached_conf_update_status.changed
 
 - name: Create group for etcd
   group:

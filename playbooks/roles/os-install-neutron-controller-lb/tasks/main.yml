@@ -125,27 +125,24 @@
     - { path: "/etc/nova/nova.conf", section: "neutron", option: "metadata_proxy_shared_secret", value: "{{ os_neutron_metadata_secret }}" }
   register: neutron_conf_files_status
 
-- block:
-
-    - name: Populate the neutron database
-      become: true
-      become_user: neutron
-      shell: "neutron-db-manage --config-file /etc/neutron/neutron.conf --config-file /etc/neutron/plugins/ml2/ml2_conf.ini upgrade head"
-
-    - name: Restart the Compute API service
-      service:
-        name: nova-api
-        state: restarted
-
-    - name: Restart the Networking services
-      service:
-        name: "{{ item }}"
-        state: restarted
-      with_items:
-        - neutron-server
-        - neutron-linuxbridge-agent
-        - neutron-dhcp-agent
-        - neutron-metadata-agent
-        - neutron-l3-agent
-
+- name: Populate the neutron database
+  become: true
+  become_user: neutron
+  shell: "neutron-db-manage --config-file /etc/neutron/neutron.conf --config-file /etc/neutron/plugins/ml2/ml2_conf.ini upgrade head"
   when: neutron_conf_files_status.changed
+
+- name: Restart the Compute API service
+  service:
+    name: nova-api
+    state: restarted
+
+- name: Restart the Networking services
+  service:
+    name: "{{ item }}"
+    state: restarted
+  with_items:
+    - neutron-server
+    - neutron-linuxbridge-agent
+    - neutron-dhcp-agent
+    - neutron-metadata-agent
+    - neutron-l3-agent

@@ -39,16 +39,12 @@
     - { path: "/etc/nova/nova.conf", section: "neutron", option: "password", value: "{{ os_neutron_password }}" }
   register: neutron_compute_conf_files_status
 
-- block:
+- name: Restart the Compute service
+  service:
+    name: nova-compute
+    state: restarted
 
-    - name: Restart the Compute service
-      service:
-        name: nova-compute
-        state: restarted
-
-    - name: Restart the Linux bridge agent
-      service:
-        name: neutron-linuxbridge-agent
-        state: restarted
-
-  when: neutron_compute_conf_files_status.changed
+- name: Restart the Linux bridge agent
+  service:
+    name: neutron-linuxbridge-agent
+    state: restarted

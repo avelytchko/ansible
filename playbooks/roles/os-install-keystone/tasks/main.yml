@@ -63,7 +63,6 @@
   service:
     name: apache2
     state: restarted
-  when: apache2_conf_file_status.changed
 
 - name: Populate and place on home dir the client env scripts
   template:

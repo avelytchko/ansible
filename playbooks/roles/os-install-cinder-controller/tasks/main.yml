@@ -119,4 +119,3 @@
     - nova-api
     - cinder-scheduler
     - apache2
-  when: nova_cinder_conf_file_status.changed

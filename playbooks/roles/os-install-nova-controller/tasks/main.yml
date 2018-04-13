@@ -165,15 +165,15 @@
     become_user: nova
     shell: "nova-manage db sync"
 
-  - name: Restart the Compute services
-    service:
-      name: "{{ item }}"
-      state: restarted
-    with_items:
-      - nova-api
-      - nova-consoleauth
-      - nova-scheduler
-      - nova-conductor
-      - nova-novncproxy
-
   when: nova_conf_file_status.changed
+
+- name: Restart the Compute services
+  service:
+    name: "{{ item }}"
+    state: restarted
+  with_items:
+    - nova-api
+    - nova-consoleauth
+    - nova-scheduler
+    - nova-conductor
+    - nova-novncproxy

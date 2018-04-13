@@ -110,4 +110,3 @@
   with_items:
     - glance-registry
     - glance-api
-  when: glance_conf_files_status.changed

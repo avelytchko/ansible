@@ -52,4 +52,3 @@
   service:
     name: nova-compute
     state: restarted
-  when: nova_compute_conf_file_status.changed
