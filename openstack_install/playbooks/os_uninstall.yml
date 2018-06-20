@@ -1,6 +1,7 @@
 ---
   - hosts: openstack
-    gather_facts: yes
+    gather_facts: no
+    ignore_errors: yes
     become: true
     tasks:
 
@@ -14,6 +15,8 @@
         apt:
           name: openstack-dashboard
           state: absent
+          purge: yes
+          autoremove: yes
 
       - name: Remove dashboard configuration files
         file:
@@ -39,10 +42,14 @@
         apt:
           name: "{{ item }}"
           state: absent
+          purge: yes
+          autoremove: yes
         with_items:
           - cinder-api
+          - cinder-common
           - cinder-scheduler
           - cinder-volume
+          - python-cinderclient
 
       - name: Remove cinder configuration files
         file:
@@ -68,13 +75,20 @@
         apt:
           name: "{{ item }}"
           state: absent
+          purge: yes
+          autoremove: yes
         with_items:
+          - neutron-common
           - neutron-server
           - neutron-plugin-ml2
           - neutron-linuxbridge-agent
           - neutron-l3-agent
           - neutron-dhcp-agent
           - neutron-metadata-agent
+          - python-neutronclient
+          - python-neutron-fwaas
+          - python-neutron-lib
+          - python-neutronclient
 
       - name: Remove neutron configuration files
         file:
@@ -101,14 +115,20 @@
         apt:
           name: "{{ item }}"
           state: absent
+          purge: yes
+          autoremove: yes
         with_items:
           - nova-compute
+          - nova-common
+          - nova-compute-kvm
           - nova-api
           - nova-conductor
           - nova-consoleauth
           - nova-novncproxy
           - nova-scheduler
           - nova-placement-api
+          - python-novaclient
+          - python-novnc
 
       - name: Remove nova configuration files
         file:
@@ -131,8 +151,16 @@
         apt:
           name: "{{ item }}"
           state: absent
+          purge: yes
+          autoremove: yes
         with_items:
           - glance
+          - glance-api
+          - glance-common
+          - glance-registry
+          - glance-store-common
+          - python-glance-store
+          - python-glanceclient
 
       - name: Remove glance configuration files
         file:
@@ -154,10 +182,15 @@
         apt:
           name: "{{ item }}"
           state: absent
+          purge: yes
+          autoremove: yes
         with_items:
           - keystone
           - apache2
           - libapache2-mod-wsgi
+          - python-keystoneclient
+          - python-keystoneauth1
+          - python-keystonemiddleware
 
       - name: Remove keystone configuration files
         file:
@@ -182,14 +215,23 @@
         apt:
           name: "{{ item }}"
           state: absent
+          purge: yes
+          autoremove: yes
         with_items:
           - memcached
           - python-memcache
+          - python-pymemcache
           - rabbitmq-server
           - mariadb-server
           - python-pymysql
           - python-mysqldb
           - python-openstackclient
+          - python-os-client-config
+          - python-swiftclient
+          - python-heatclient
+          - python-ceilometerclient
+          - python-barbicanclient
+          - novnc
 
       - name: Remove openstack related configuration files
         file:
