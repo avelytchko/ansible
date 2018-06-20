@@ -1,6 +1,0 @@
----
-  - hosts: origin
-    gather_facts: no
-    roles:
-      - backup-www
-
