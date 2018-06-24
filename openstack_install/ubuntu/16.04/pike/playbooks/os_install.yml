@@ -20,4 +20,5 @@
       - { role: os-install-neutron-compute-lb }
       - { role: os-install-cinder-controller }
       - { role: os-install-cinder-storage }
+      - { role: os-install-heat }
       - { role: os-install-dashboard }
