@@ -12,7 +12,7 @@
     path: /etc/lvm/lvm.conf
     # regexp: '^-l 127.0.0.1$'
     insertafter: '(.*)# filter = (.*)'
-    line: "        filter = [ \"a/{{ os_cinder_device }}/\", \"r/.*/\"]"
+    line: "        filter = [ \"a/sd.*/\", \"r/.*/\"]"
     state: present
   register: lvm_conf_update_status
 
