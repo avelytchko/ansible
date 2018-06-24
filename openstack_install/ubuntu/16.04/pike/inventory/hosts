@@ -21,7 +21,6 @@ os_neutron_provider_network_name=public
 os_neutron_metadata_secret=secret
 os_cinder_mysql_password=secret
 os_cinder_password=secret
-os_cinder_device=sdb
 os_cinder_volume_group=vg_h1
 os_heat_mysql_password=secret
 os_heat_password=secret
