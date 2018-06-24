@@ -18,7 +18,7 @@
           purge: yes
           autoremove: yes
 
-      - name: Remove dashboard configuration files
+      - name: Remove dashboard configuration files and folders
         file:
           path: "{{ item }}"
           state: absent
@@ -26,7 +26,39 @@
           - "/etc/openstack-dashboard/"
           - "/etc/apache2/conf-available/openstack-dashboard.conf"
           - "/var/lib/openstack-dashboard/"
-          - "/var/lib/apache2/"
+
+# Heat
+      - name: Stop the Orchestration services
+        service:
+          name: "{{ item }}"
+          state: stopped
+        with_items:
+          - heat-api
+          - heat-api-cfn
+          - heat-engine
+
+      - name: Uninstall heat packages
+        apt:
+          name: "{{ item }}"
+          state: absent
+          purge: yes
+          autoremove: yes
+        with_items:
+          - heat-api
+          - heat-api-cfn
+          - heat-common
+          - heat-engine
+          - python-heat
+          - python-heatclient
+
+      - name: Remove cinder configuration files and folders
+        file:
+          path: "{{ item }}"
+          state: absent
+        with_items:
+          - "/etc/heat/"
+          - "/var/lib/heat/"
+          - "/var/log/heat/"
 
 # Cinder
       - name: Stop the Block Storage volume service including its dependencies
@@ -51,13 +83,21 @@
           - cinder-volume
           - python-cinderclient
 
-      - name: Remove cinder configuration files
+      - name: Remove cinder configuration files and folders
         file:
           path: "{{ item }}"
           state: absent
         with_items:
           - "/etc/cinder/"
           - "/var/lib/cinder/"
+          - "/var/log/cinder/"
+
+      - name: Remove cinder logical volume pool
+        lvol:
+          vg: "{{ os_cinder_volume_group }}"
+          lv: "{{ os_cinder_volume_group }}-pool"
+          state: absent
+          force: yes
 
 # Neutron
       - name: Stop neutron services
@@ -90,7 +130,7 @@
           - python-neutron-lib
           - python-neutronclient
 
-      - name: Remove neutron configuration files
+      - name: Remove neutron configuration files and folders
         file:
           path: "{{ item }}"
           state: absent
@@ -131,7 +171,7 @@
           - python-novaclient
           - python-novnc
 
-      - name: Remove nova configuration files
+      - name: Remove nova configuration files and folders
         file:
           path: "{{ item }}"
           state: absent
@@ -164,7 +204,7 @@
           - python-glance-store
           - python-glanceclient
 
-      - name: Remove glance configuration files
+      - name: Remove glance configuration files and folders
         file:
           path: "{{ item }}"
           state: absent
@@ -195,7 +235,7 @@
           - python-keystoneauth1
           - python-keystonemiddleware
 
-      - name: Remove keystone configuration files
+      - name: Remove keystone configuration files and folders
         file:
           path: "{{ item }}"
           state: absent
@@ -204,6 +244,7 @@
           - "/etc/apache2/"
           - "/var/log/keystone/"
           - "/var/log/apache2/"
+          - "/var/lib/apache2/"
 
 # Environment
       - name: Stop openstack related services
@@ -238,7 +279,7 @@
           - python-barbicanclient
           - novnc
 
-      - name: Remove openstack related configuration files
+      - name: Remove openstack related configuration files and folders
         file:
           path: "{{ item }}"
           state: absent
