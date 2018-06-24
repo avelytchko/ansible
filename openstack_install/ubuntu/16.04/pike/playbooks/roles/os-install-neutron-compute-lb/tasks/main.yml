@@ -1,0 +1,50 @@
+---
+- name: Install neutron package
+  apt:
+    name: neutron-linuxbridge-agent
+    state: present
+
+- name: Populate neutron config files
+  ini_file:
+    path: "{{ item.path }}"
+    section: "{{ item.section }}"
+    option: "{{ item.option }}"
+    value: "{{ item.value }}"
+  with_items:
+    - { path: "/etc/neutron/neutron.conf", section: "DEFAULT", option: "transport_url", value: "rabbit://openstack:{{ os_env_rabbitmq_openstack_password }}@controller" }
+    - { path: "/etc/neutron/neutron.conf", section: "DEFAULT", option: "auth_strategy", value: "keystone" }
+    - { path: "/etc/neutron/neutron.conf", section: "keystone_authtoken", option: "auth_uri", value: "http://controller:5000" }
+    - { path: "/etc/neutron/neutron.conf", section: "keystone_authtoken", option: "auth_url", value: "http://controller:35357" }
+    - { path: "/etc/neutron/neutron.conf", section: "keystone_authtoken", option: "memcached_servers", value: "controller:11211" }
+    - { path: "/etc/neutron/neutron.conf", section: "keystone_authtoken", option: "auth_type", value: "password" }
+    - { path: "/etc/neutron/neutron.conf", section: "keystone_authtoken", option: "project_domain_name", value: "default" }
+    - { path: "/etc/neutron/neutron.conf", section: "keystone_authtoken", option: "user_domain_name", value: "default" }
+    - { path: "/etc/neutron/neutron.conf", section: "keystone_authtoken", option: "project_name", value: "service" }
+    - { path: "/etc/neutron/neutron.conf", section: "keystone_authtoken", option: "username", value: "neutron" }
+    - { path: "/etc/neutron/neutron.conf", section: "keystone_authtoken", option: "password", value: "{{ os_neutron_password }}" }
+    - { path: "/etc/neutron/plugins/ml2/linuxbridge_agent.ini", section: "linux_bridge", option: "physical_interface_mappings", value: "{{ os_neutron_provider_network_name }}:{{ os_neutron_provider_interface_name }}" }
+    - { path: "/etc/neutron/plugins/ml2/linuxbridge_agent.ini", section: "vxlan", option: "enable_vxlan", value: "true" }
+    - { path: "/etc/neutron/plugins/ml2/linuxbridge_agent.ini", section: "vxlan", option: "local_ip", value: "{{ os_management_ip }}" }
+    - { path: "/etc/neutron/plugins/ml2/linuxbridge_agent.ini", section: "vxlan", option: "l2_population", value: "true" }
+    - { path: "/etc/neutron/plugins/ml2/linuxbridge_agent.ini", section: "securitygroup", option: "enable_security_group", value: "true" }
+    - { path: "/etc/neutron/plugins/ml2/linuxbridge_agent.ini", section: "securitygroup", option: "firewall_driver", value: "neutron.agent.linux.iptables_firewall.IptablesFirewallDriver" }
+    - { path: "/etc/nova/nova.conf", section: "neutron", option: "url", value: "http://controller:9696" }
+    - { path: "/etc/nova/nova.conf", section: "neutron", option: "auth_url", value: "http://controller:35357" }
+    - { path: "/etc/nova/nova.conf", section: "neutron", option: "auth_type", value: "password" }
+    - { path: "/etc/nova/nova.conf", section: "neutron", option: "project_domain_name", value: "default" }
+    - { path: "/etc/nova/nova.conf", section: "neutron", option: "user_domain_name", value: "default" }
+    - { path: "/etc/nova/nova.conf", section: "neutron", option: "region_name", value: "RegionOne" }
+    - { path: "/etc/nova/nova.conf", section: "neutron", option: "project_name", value: "service" }
+    - { path: "/etc/nova/nova.conf", section: "neutron", option: "username", value: "neutron" }
+    - { path: "/etc/nova/nova.conf", section: "neutron", option: "password", value: "{{ os_neutron_password }}" }
+  register: neutron_compute_conf_files_status
+
+- name: Restart the Compute service
+  service:
+    name: nova-compute
+    state: restarted
+
+- name: Restart the Linux bridge agent
+  service:
+    name: neutron-linuxbridge-agent
+    state: restarted

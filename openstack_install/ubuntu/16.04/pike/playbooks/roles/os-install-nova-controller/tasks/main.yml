@@ -1,0 +1,187 @@
+---
+- name: Create nova databases
+  mysql_db:
+    login_user: root
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - nova_api
+    - nova
+    - nova_cell0
+
+- name: Grant all privileges on nova dbs to user nova
+  mysql_user:
+    login_user: root
+    name: nova
+    host: "{{ item }}"
+    password: "{{ os_nova_mysql_password }}"
+    priv: 'nova_api.*:ALL/nova.*:ALL/nova_cell0.*:ALL'
+    state: present
+  with_items:
+    - "localhost"
+    - "%"
+
+- name: Create the nova user
+  os_user:
+    name: nova
+    password: "{{ os_nova_password }}"
+    domain: default
+    state: present
+
+- name: Add the admin role to the nova user and service project
+  os_user_role:
+    role: admin
+    user: nova
+    project: service
+
+- name: Create the nova service entity
+  os_keystone_service:
+    name: nova
+    service_type: compute
+    description: "OpenStack Compute"
+    state: present
+
+- name: Create the Compute API endpoints
+  os_keystone_endpoint:
+    service: nova
+    endpoint_interface: "{{ item.endpoint_interface }}"
+    url: http://controller:8774/v2.1
+    region: RegionOne
+    state: present
+  with_items:
+    - { endpoint_interface: public }
+    - { endpoint_interface: internal }
+    - { endpoint_interface: admin }
+
+- name: Create a Placement service user
+  os_user:
+    name: placement
+    password: "{{ os_placement_password }}"
+    domain: default
+    state: present
+
+- name: Add the Placement user to the service project with the admin role
+  os_user_role:
+    role: admin
+    user: placement
+    project: service
+
+- name: Create the Placement API entry in the service catalog
+  os_keystone_service:
+    name: placement
+    service_type: placement
+    description: "Placement API"
+    state: present
+
+- name: Create the Compute API endpoints
+  os_keystone_endpoint:
+    service: placement
+    endpoint_interface: "{{ item.endpoint_interface }}"
+    url: http://controller:8778
+    region: RegionOne
+    state: present
+  with_items:
+    - { endpoint_interface: public }
+    - { endpoint_interface: internal }
+    - { endpoint_interface: admin }
+
+- name: Install nova packages
+  apt:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - nova-api
+    - nova-conductor
+    - nova-consoleauth
+    - nova-novncproxy
+    - nova-scheduler
+    - nova-placement-api
+
+- name: Populate nova.conf config file
+  ini_file:
+    path: /etc/nova/nova.conf
+    section: "{{ item.section }}"
+    option: "{{ item.option }}"
+    value: "{{ item.value }}"
+  with_items:
+    - { section: "api_database", option: "connection", value: "mysql+pymysql://nova:{{ os_nova_mysql_password }}@controller/nova_api" }
+    - { section: "database", option: "connection", value: "mysql+pymysql://nova:{{ os_nova_mysql_password }}@controller/nova" }
+    - { section: "DEFAULT", option: "transport_url", value: "rabbit://openstack:{{ os_env_rabbitmq_openstack_password }}@controller" }
+    - { section: "api", option: "auth_strategy", value: "keystone" }
+    - { section: "keystone_authtoken", option: "auth_uri", value: "http://controller:5000" }
+    - { section: "keystone_authtoken", option: "auth_url", value: "http://controller:35357" }
+    - { section: "keystone_authtoken", option: "memcached_servers", value: "controller:11211" }
+    - { section: "keystone_authtoken", option: "auth_type", value: "password" }
+    - { section: "keystone_authtoken", option: "project_domain_name", value: "default" }
+    - { section: "keystone_authtoken", option: "user_domain_name", value: "default" }
+    - { section: "keystone_authtoken", option: "project_name", value: "service" }
+    - { section: "keystone_authtoken", option: "username", value: "nova" }
+    - { section: "keystone_authtoken", option: "password", value: "{{ os_nova_password }}" }
+    - { section: "DEFAULT", option: "my_ip", value: "{{ os_management_ip }}" }
+    - { section: "DEFAULT", option: "use_neutron", value: "True" }
+    - { section: "DEFAULT", option: "firewall_driver", value: "nova.virt.firewall.NoopFirewallDriver" }
+    - { section: "vnc", option: "enabled", value: "true" }
+    - { section: "vnc", option: "vncserver_listen", value: "$my_ip" }
+    - { section: "vnc", option: "vncserver_proxyclient_address", value: "$my_ip" }
+    - { section: "glance", option: "api_servers", value: "http://controller:9292" }
+    - { section: "oslo_concurrency", option: "lock_path", value: "/var/lib/nova/tmp" }
+    - { section: "placement", option: "os_region_name", value: "RegionOne" }
+    - { section: "placement", option: "project_domain_name", value: "Default" }
+    - { section: "placement", option: "project_name", value: "service" }
+    - { section: "placement", option: "auth_type", value: "password" }
+    - { section: "placement", option: "user_domain_name", value: "Default" }
+    - { section: "placement", option: "auth_url", value: "http://controller:35357/v3" }
+    - { section: "placement", option: "username", value: "placement" }
+    - { section: "placement", option: "password", value: "{{ os_placement_password }}" }
+    - { section: "scheduler", option: "discover_hosts_in_cells_interval", value: "300" }
+  register: nova_conf_file_status
+
+- name: Due to a packaging bug, remove the log_dir option
+  ini_file:
+    path: /etc/nova/nova.conf
+    section: DEFAULT
+    option: log_dir
+    state: absent
+
+- block:
+
+  - name: Populate the nova-api database
+    become: true
+    become_user: nova
+    vars:
+      ansible_ssh_pipelining: true
+    shell: "nova-manage api_db sync"
+
+  - name: Register the cell0 database
+    become: true
+    become_user: nova
+    vars:
+      ansible_ssh_pipelining: true
+    shell: "nova-manage cell_v2 map_cell0"
+
+  - name: Create the cell1 cell
+    become: true
+    become_user: nova
+    vars:
+      ansible_ssh_pipelining: true
+    shell: "nova-manage cell_v2 create_cell --name=cell1 --verbose"
+
+  - name: Populate the nova database
+    become: true
+    become_user: nova
+    vars:
+      ansible_ssh_pipelining: true
+    shell: "nova-manage db sync"
+
+  when: nova_conf_file_status.changed
+
+- name: Restart the Compute services
+  service:
+    name: "{{ item }}"
+    state: restarted
+  with_items:
+    - nova-api
+    - nova-consoleauth
+    - nova-scheduler
+    - nova-conductor
+    - nova-novncproxy
