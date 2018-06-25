@@ -160,8 +160,7 @@
       debug: msg="IP of the server is {{ os_server_ip.stdout }}"
 
     - name: Waiting for server to boot
-      local_action: wait_for
-      args:
+      wait_for:
         host: "{{ os_instance_ip }}"
         port: 22
         state: started
