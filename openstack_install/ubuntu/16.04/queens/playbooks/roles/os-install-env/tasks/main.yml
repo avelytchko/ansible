@@ -1,0 +1,183 @@
+---
+- name: Install python
+  raw: "test -e /usr/bin/python || (apt-get install -y python)"
+
+- name: Populate /etc/hosts with aliases
+  lineinfile:
+    path: /etc/hosts
+    line: "{{ os_management_ip }} controller compute1 block1 {{ ansible_hostname }}"
+
+- name: Comment out entry 127.0.1.1 to prevent name resolution problems
+  replace:
+    path: /etc/hosts
+    regexp: '^(127.0.1.1.*)'
+    replace: '#\1'
+
+- name: Install chrony
+  apt:
+    name: chrony
+    state: present
+  register: apt_chrony_package_install_status
+
+- name: Populate /etc/chrony.conf 
+  lineinfile:
+    path: /etc/chrony.conf
+    line: "{{ item }} iburst"
+    create: yes
+  with_items:
+    - "0.ua.pool.ntp.org"
+    - "1.ua.pool.ntp.org"
+    - "2.ua.pool.ntp.org"
+
+- name: Enable and restart chrony
+  service:
+    name: chrony
+    state: restarted
+    enabled: yes
+
+- name: Install software-properties-common and aptitude
+  apt:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - software-properties-common
+    - aptitude
+
+- name: Install ubuntu cloud keyring
+  apt:
+    pkg: ubuntu-cloud-keyring
+    state: present
+
+- name: Add pike repository
+  apt_repository:
+    repo: "deb http://ubuntu-cloud.archive.canonical.com/ubuntu xenial-updates/queens main"
+    update_cache: yes
+
+- name: Update and upgrade packages
+  apt:
+    update_cache: yes
+    upgrade: dist
+
+- name: Install python-openstackclient
+  apt:
+    name: python-openstackclient
+    state: present
+
+- name: Install mariadb and dependencies
+  apt:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - mariadb-server
+    - python-pymysql
+    - python-mysqldb
+  register: apt_mariadb_package_install_status
+
+- name: Populate and copy template for mariadb
+  template:
+    src: "99-openstack.cnf.j2"
+    dest: /etc/mysql/mariadb.conf.d/99-openstack.cnf
+    mode: 0644
+
+- name: Restart mariadb
+  service:
+    name: mysql
+    state: restarted
+
+- name: Update mysql root password for all root accounts from local
+  mysql_user:
+    login_user: root
+    name: root
+    host: "{{ item }}"
+    password: "{{ os_env_mysql_root_password }}"
+    priv: '*.*:ALL,GRANT'
+  with_items:
+    - "{{ os_management_ip }}"
+    - "127.0.0.1"
+    - "::1"
+    - "localhost"
+  when: apt_mariadb_package_install_status.changed
+
+- name: Ensure anonymous users are not in the database
+  mysql_user: name='' host={{ item }} state=absent
+  with_items:
+    - "{{ os_management_ip }}"
+    - "127.0.0.1"
+    - "::1"
+    - "localhost"
+
+- name: Remove the test database
+  mysql_db: name=test state=absent
+
+- name: Install RabbitMQ message queue
+  apt:
+    name: rabbitmq-server
+    state: present
+  register: apt_rabbitmq_package_install_status
+
+- name: Add user openstack to RabbitMQ
+  rabbitmq_user:
+    user: openstack
+    password: "{{ os_env_rabbitmq_openstack_password }}"
+    permissions:
+      - vhost: /
+        configure_priv: .*
+        read_priv: .*
+        write_priv: .*
+    state: present
+  when: apt_rabbitmq_package_install_status.changed
+
+- name: Install memcached
+  apt:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - memcached
+    - python-memcache
+
+- name: Update /etc/memcached.conf
+  lineinfile:
+    path: /etc/memcached.conf
+    regexp: '^-l 127.0.0.1$'
+    line: "-l 127.0.0.1,{{ os_management_ip }}"
+    backrefs: yes
+  register: memcached_conf_update_status
+
+- name: Restart memcached
+  service:
+    name: memcached
+    state: restarted
+
+- name: Install etcd
+  apt:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - etcd
+
+- name: Create necessary directories for etcd
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: etcd
+    group: etcd
+  with_items:
+    - /etc/etcd
+
+- name: Populate and copy templates for etcd
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: 0644
+  with_items:
+    - { src: "etcd.conf.yml.j2", dest: "/etc/etcd/etcd.conf.yml" }
+    - { src: "etcd.service.j2", dest: "/lib/systemd/system/etcd.service" }
+
+- name: Systemctl daemon-reload
+  shell: "systemctl daemon-reload"
+
+- name: Enable and start etcd service
+  service:
+    name: etcd
+    state: started
+    enabled: yes
