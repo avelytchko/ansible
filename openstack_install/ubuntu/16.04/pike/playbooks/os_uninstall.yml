@@ -129,6 +129,7 @@
           - python-neutron-fwaas
           - python-neutron-lib
           - python-neutronclient
+        register: neutron_packages_status
 
       - name: Remove neutron configuration files and folders
         file:
@@ -310,3 +311,30 @@
           repo: "deb http://ubuntu-cloud.archive.canonical.com/ubuntu xenial-updates/pike main"
           state: absent
           update_cache: yes
+
+      - name: Reboot server for applying changes
+        shell: "shutdown -r +1 'Apply changes'"
+        register: reboot_status
+        until: reboot_status.rc == 0
+        retries: 6
+        delay: 10
+        when: neutron_packages_status.changed
+
+      - name: Waiting for server to shutdown
+        local_action: wait_for
+        args:
+          host: "{{ inventory_hostname }}"
+          port: 22
+          state: stopped
+          timeout: 300
+        when: neutron_packages_status.changed
+
+      - name: Waiting for server to boot
+        local_action: wait_for
+        args:
+          host: "{{ inventory_hostname }}"
+          port: 22
+          state: started
+          delay: 30
+          timeout: 300
+        when: neutron_packages_status.changed
