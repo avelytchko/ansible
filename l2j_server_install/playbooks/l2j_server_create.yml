@@ -2,5 +2,5 @@
   - hosts: l2j
     gather_facts: no
     roles:
-      - { role: host-key }
+      - { role: "{{ playbook_dir }}/../../common/playbooks/roles/host-key/" }
       - { role: l2j-server }

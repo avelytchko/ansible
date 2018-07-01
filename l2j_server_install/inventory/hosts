@@ -1,20 +1,5 @@
-[servers]
-cate.rand.kiev.ua
-mara.rand.kiev.ua
-phoenix.rand.kiev.ua
-welch.rand.kiev.ua
-
-[origin]
-welch.rand.kiev.ua
-
-[backup]
-cate.rand.kiev.ua
-
-[openstack]
-wilson.rand.kiev.ua ansible_ssh_host=192.168.88.230 ansible_connection=local
-
 [l2j]
-192.168.89.23 ansible_ssh_private_key_file=/home/rand/.ssh/id_rsa_ubuntu1710 ansible_user=ubuntu
+wilson.rand.kiev.ua ansible_host=192.168.89.23 ansible_ssh_private_key_file=/home/rand/.ssh/id_rsa_ubuntu1710 ansible_user=ubuntu
 
 [l2j:vars]
 l2j_server_dir=/opt/l2j
@@ -22,42 +7,3 @@ mysql_root_password=
 mysql_l2jgs_password=
 mysql_l2jls_password=
 
-[openstack:vars]
-os_image_url=https://cloud-images.ubuntu.com/releases/17.10/release/ubuntu-17.10-server-cloudimg-amd64.img
-os_client_project_script=/home/rand/demo-openrc
-os_client_admin_script=/home/rand/admin-openrc
-os_flavor_name=ubuntu-17.10
-os_flavor={"flavor1": {"vcpus": "1", "ram": "8192", "disk": "20", "swap": "8192"} }
-os_image_file_path=/home/rand/Downloads
-os_image_name=ubuntu-17.10
-os_instance_name=ubuntu-17.10
-# do not use special characters for key_name
-os_key_name=ubuntu1710
-os_provider_network_name=public
-os_selfservice_network_name=internal
-# allowed values are 'provider' and 'selfservice'
-os_network_type=selfservice
-os_instance_ip=192.168.89.23
-os_security_group_name=ubuntu-17.10
-os_security_group_rules={"rule1": {"proto": "tcp", "port": "2106"}, "rule2": {"proto": "tcp", "port": "9014"}, "rule3": {"proto": "tcp", "port": "7777"}, "rule4": {"proto": "tcp", "port": "22"}, "rule5": {"proto": "icmp"} }
-os_env_mysql_root_password=
-os_env_rabbitmq_openstack_password=
-os_env_etcd_version=v3.2.7
-os_keystone_mysql_password=
-os_keystone_admin_password=
-os_keystone_demo_user=demo
-os_keystone_demo_password=
-os_glance_mysql_password=
-os_glance_password=
-os_nova_mysql_password=
-os_nova_password=
-os_placement_password=
-os_neutron_mysql_password=
-os_neutron_password=
-os_neutron_provider_interface_name=enp0s31f6
-os_neutron_provider_network_name=public
-os_neutron_metadata_secret=
-os_cinder_mysql_password=
-os_cinder_password=
-os_cinder_device=sdb
-os_cinder_volume_group=vg_h1
