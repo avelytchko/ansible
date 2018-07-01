@@ -304,3 +304,9 @@
         group:
           name: etcd
           state: absent
+
+      - name: Remove pike repository
+        apt_repository:
+          repo: "deb http://ubuntu-cloud.archive.canonical.com/ubuntu xenial-updates/pike main"
+          state: absent
+          update_cache: yes
