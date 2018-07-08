@@ -55,14 +55,6 @@
     - { endpoint_interface: internal }
     - { endpoint_interface: admin }
 
-- name: Fix glance packaging
-  file:
-    path: "{{ item.path }}"
-    state: "{{ item.state }}"
-  with_items:
-    - { path: "/etc/glance/", state: "directory"}
-    - { path: "/etc/glance/rootwrap.conf", state: "touch"}
-
 - name: Install glance packages
   apt:
     name: "{{ item }}"
