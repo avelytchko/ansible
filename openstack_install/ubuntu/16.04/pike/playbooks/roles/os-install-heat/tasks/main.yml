@@ -125,7 +125,7 @@
     - { section: "database", option: "connection", value: "mysql+pymysql://heat:{{ os_heat_mysql_password }}@controller/heat" }
     - { section: "DEFAULT", option: "transport_url", value: "rabbit://openstack:{{ os_env_rabbitmq_openstack_password }}@controller" }
     - { section: "keystone_authtoken", option: "auth_uri", value: "http://controller:5000" }
-    - { section: "keystone_authtoken", option: "auth_url", value: "http://controller:35357" }
+    - { section: "keystone_authtoken", option: "auth_url", value: "http://controller:5000" }
     - { section: "keystone_authtoken", option: "memcached_servers", value: "controller:11211" }
     - { section: "keystone_authtoken", option: "auth_type", value: "password" }
     - { section: "keystone_authtoken", option: "project_domain_name", value: "default" }
@@ -134,11 +134,11 @@
     - { section: "keystone_authtoken", option: "username", value: "heat" }
     - { section: "keystone_authtoken", option: "password", value: "{{ os_heat_password }}" }
     - { section: "trustee", option: "auth_type", value: "password" }
-    - { section: "trustee", option: "auth_url", value: "http://controller:35357" }
+    - { section: "trustee", option: "auth_url", value: "http://controller:5000" }
     - { section: "trustee", option: "username", value: "heat" }
     - { section: "trustee", option: "password", value: "{{ os_heat_password }}" }
     - { section: "trustee", option: "user_domain_name", value: "default" }
-    - { section: "clients_keystone", option: "auth_uri", value: "http://controller:35357" }
+    - { section: "clients_keystone", option: "auth_uri", value: "http://controller:5000" }
     - { section: "ec2authtoken", option: "auth_uri", value: "http://controller:5000/v3" }
     - { section: "DEFAULT", option: "heat_metadata_server_url", value: "http://controller:8000" }
     - { section: "DEFAULT", option: "heat_waitcondition_server_url", value: "http://controller:8000/v1/waitcondition" }

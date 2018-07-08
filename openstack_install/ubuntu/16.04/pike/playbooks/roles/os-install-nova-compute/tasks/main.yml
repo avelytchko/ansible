@@ -14,7 +14,7 @@
     - { section: "DEFAULT", option: "transport_url", value: "rabbit://openstack:{{ os_env_rabbitmq_openstack_password }}@controller" }
     - { section: "api", option: "auth_strategy", value: "keystone" }
     - { section: "keystone_authtoken", option: "auth_uri", value: "http://controller:5000" }
-    - { section: "keystone_authtoken", option: "auth_url", value: "http://controller:35357" }
+    - { section: "keystone_authtoken", option: "auth_url", value: "http://controller:5000" }
     - { section: "keystone_authtoken", option: "memcached_servers", value: "controller:11211" }
     - { section: "keystone_authtoken", option: "auth_type", value: "password" }
     - { section: "keystone_authtoken", option: "project_domain_name", value: "default" }
@@ -36,7 +36,7 @@
     - { section: "placement", option: "project_name", value: "service" }
     - { section: "placement", option: "auth_type", value: "password" }
     - { section: "placement", option: "user_domain_name", value: "Default" }
-    - { section: "placement", option: "auth_url", value: "http://controller:35357/v3" }
+    - { section: "placement", option: "auth_url", value: "http://controller:5000/v3" }
     - { section: "placement", option: "username", value: "placement" }
     - { section: "placement", option: "password", value: "{{ os_placement_password }}" }
   register: nova_compute_conf_file_status

@@ -75,7 +75,7 @@
     - { path: "/etc/neutron/neutron.conf", section: "DEFAULT", option: "transport_url", value: "rabbit://openstack:{{ os_env_rabbitmq_openstack_password }}@controller" }
     - { path: "/etc/neutron/neutron.conf", section: "DEFAULT", option: "auth_strategy", value: "keystone" }
     - { path: "/etc/neutron/neutron.conf", section: "keystone_authtoken", option: "auth_uri", value: "http://controller:5000" }
-    - { path: "/etc/neutron/neutron.conf", section: "keystone_authtoken", option: "auth_url", value: "http://controller:35357" }
+    - { path: "/etc/neutron/neutron.conf", section: "keystone_authtoken", option: "auth_url", value: "http://controller:5000" }
     - { path: "/etc/neutron/neutron.conf", section: "keystone_authtoken", option: "memcached_servers", value: "controller:11211" }
     - { path: "/etc/neutron/neutron.conf", section: "keystone_authtoken", option: "auth_type", value: "password" }
     - { path: "/etc/neutron/neutron.conf", section: "keystone_authtoken", option: "project_domain_name", value: "default" }
@@ -85,7 +85,7 @@
     - { path: "/etc/neutron/neutron.conf", section: "keystone_authtoken", option: "password", value: "{{ os_neutron_password }}" }
     - { path: "/etc/neutron/neutron.conf", section: "DEFAULT", option: "notify_nova_on_port_status_changes", value: "true" }
     - { path: "/etc/neutron/neutron.conf", section: "DEFAULT", option: "notify_nova_on_port_data_changes", value: "true" }
-    - { path: "/etc/neutron/neutron.conf", section: "nova", option: "auth_url", value: "http://controller:35357" }
+    - { path: "/etc/neutron/neutron.conf", section: "nova", option: "auth_url", value: "http://controller:5000" }
     - { path: "/etc/neutron/neutron.conf", section: "nova", option: "auth_type", value: "password" }
     - { path: "/etc/neutron/neutron.conf", section: "nova", option: "project_domain_name", value: "default" }
     - { path: "/etc/neutron/neutron.conf", section: "nova", option: "user_domain_name", value: "default" }
@@ -113,7 +113,7 @@
     - { path: "/etc/neutron/metadata_agent.ini", section: "DEFAULT", option: "nova_metadata_host", value: "controller" }
     - { path: "/etc/neutron/metadata_agent.ini", section: "DEFAULT", option: "metadata_proxy_shared_secret", value: "{{ os_neutron_metadata_secret }}" }
     - { path: "/etc/nova/nova.conf", section: "neutron", option: "url", value: "http://controller:9696" }
-    - { path: "/etc/nova/nova.conf", section: "neutron", option: "auth_url", value: "http://controller:35357" }
+    - { path: "/etc/nova/nova.conf", section: "neutron", option: "auth_url", value: "http://controller:5000" }
     - { path: "/etc/nova/nova.conf", section: "neutron", option: "auth_type", value: "password" }
     - { path: "/etc/nova/nova.conf", section: "neutron", option: "project_domain_name", value: "default" }
     - { path: "/etc/nova/nova.conf", section: "neutron", option: "user_domain_name", value: "default" }

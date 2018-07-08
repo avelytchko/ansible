@@ -55,6 +55,14 @@
     - { endpoint_interface: internal }
     - { endpoint_interface: admin }
 
+- name: Fix glance packaging
+  file:
+    path: "{{ item.path }}"
+    state: "{{ item.state }}"
+  with_items:
+    - { path: "/etc/glance/", state: "directory"}
+    - { path: "/etc/glance/rootwrap.conf", state: "touch"}
+
 - name: Install glance packages
   apt:
     name: "{{ item }}"
@@ -71,7 +79,7 @@
   with_items:
     - { path: "/etc/glance/glance-api.conf", section: "database", option: "connection", value: "mysql+pymysql://glance:{{ os_glance_mysql_password }}@controller/glance" }
     - { path: "/etc/glance/glance-api.conf", section: "keystone_authtoken", option: "auth_uri", value: "http://controller:5000" }
-    - { path: "/etc/glance/glance-api.conf", section: "keystone_authtoken", option: "auth_url", value: "http://controller:35357" }
+    - { path: "/etc/glance/glance-api.conf", section: "keystone_authtoken", option: "auth_url", value: "http://controller:5000" }
     - { path: "/etc/glance/glance-api.conf", section: "keystone_authtoken", option: "memcached_servers", value: "controller:11211" }
     - { path: "/etc/glance/glance-api.conf", section: "keystone_authtoken", option: "auth_type", value: "password" }
     - { path: "/etc/glance/glance-api.conf", section: "keystone_authtoken", option: "project_domain_name", value: "default" }
@@ -86,7 +94,7 @@
     - { path: "/etc/glance/glance-registry.conf", section: "database", option: "connection", value: "mysql+pymysql://glance:{{ os_glance_mysql_password }}@controller/glance" }
     - { path: "/etc/glance/glance-registry.conf", section: "database", option: "connection", value: "mysql+pymysql://glance:{{ os_glance_mysql_password }}@controller/glance" }
     - { path: "/etc/glance/glance-registry.conf", section: "keystone_authtoken", option: "auth_uri", value: "http://controller:5000" }
-    - { path: "/etc/glance/glance-registry.conf", section: "keystone_authtoken", option: "auth_url", value: "http://controller:35357" }
+    - { path: "/etc/glance/glance-registry.conf", section: "keystone_authtoken", option: "auth_url", value: "http://controller:5000" }
     - { path: "/etc/glance/glance-registry.conf", section: "keystone_authtoken", option: "memcached_servers", value: "controller:11211" }
     - { path: "/etc/glance/glance-registry.conf", section: "keystone_authtoken", option: "auth_type", value: "password" }
     - { path: "/etc/glance/glance-registry.conf", section: "keystone_authtoken", option: "project_domain_name", value: "default" }

@@ -14,7 +14,7 @@
     - { path: "/etc/neutron/neutron.conf", section: "DEFAULT", option: "transport_url", value: "rabbit://openstack:{{ os_env_rabbitmq_openstack_password }}@controller" }
     - { path: "/etc/neutron/neutron.conf", section: "DEFAULT", option: "auth_strategy", value: "keystone" }
     - { path: "/etc/neutron/neutron.conf", section: "keystone_authtoken", option: "auth_uri", value: "http://controller:5000" }
-    - { path: "/etc/neutron/neutron.conf", section: "keystone_authtoken", option: "auth_url", value: "http://controller:35357" }
+    - { path: "/etc/neutron/neutron.conf", section: "keystone_authtoken", option: "auth_url", value: "http://controller:5000" }
     - { path: "/etc/neutron/neutron.conf", section: "keystone_authtoken", option: "memcached_servers", value: "controller:11211" }
     - { path: "/etc/neutron/neutron.conf", section: "keystone_authtoken", option: "auth_type", value: "password" }
     - { path: "/etc/neutron/neutron.conf", section: "keystone_authtoken", option: "project_domain_name", value: "default" }
@@ -29,7 +29,7 @@
     - { path: "/etc/neutron/plugins/ml2/linuxbridge_agent.ini", section: "securitygroup", option: "enable_security_group", value: "true" }
     - { path: "/etc/neutron/plugins/ml2/linuxbridge_agent.ini", section: "securitygroup", option: "firewall_driver", value: "neutron.agent.linux.iptables_firewall.IptablesFirewallDriver" }
     - { path: "/etc/nova/nova.conf", section: "neutron", option: "url", value: "http://controller:9696" }
-    - { path: "/etc/nova/nova.conf", section: "neutron", option: "auth_url", value: "http://controller:35357" }
+    - { path: "/etc/nova/nova.conf", section: "neutron", option: "auth_url", value: "http://controller:5000" }
     - { path: "/etc/nova/nova.conf", section: "neutron", option: "auth_type", value: "password" }
     - { path: "/etc/nova/nova.conf", section: "neutron", option: "project_domain_name", value: "default" }
     - { path: "/etc/nova/nova.conf", section: "neutron", option: "user_domain_name", value: "default" }
