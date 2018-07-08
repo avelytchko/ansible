@@ -141,6 +141,27 @@
           - "/var/log/neutron/"
 
 # Nova
+      - name: List existing openstack VMs in KVM
+        virt:
+          command: list_vms
+        register: list_vms_status
+
+      - name: Undefine existing openstack VMs in KVM
+        virt:
+          name: "{{ item }}"
+          command: undefine
+        when: "'instance-' in item"
+        with_items:
+          - "{{ list_vms_status.list_vms }}"
+
+      - name: Destroy existing openstack VMs in KVM
+        virt:
+          name: "{{ item }}"
+          state: destroyed
+        when: "'instance-' in item"
+        with_items:
+          - "{{ list_vms_status.list_vms }}"
+
       - name: Stop nova services
         service:
           name: "{{ item }}"
@@ -194,7 +215,6 @@
         apt:
           name: "{{ item }}"
           state: absent
-          purge: yes
           autoremove: yes
         with_items:
           - glance
@@ -279,6 +299,22 @@
           - python-ceilometerclient
           - python-barbicanclient
           - novnc
+
+      - name: Uninstall openstack related packages via pip
+        pip:
+          name: "{{ item }}"
+          state: absent
+        with_items:
+          - openstacksdk
+          - os-service-types
+          - python-designateclient
+          - python-heatclient
+          - python-ironicclient
+          - python-magnumclient
+          - python-mistralclient
+          - python-swiftclient
+          - python-troveclient
+          - shade
 
       - name: Remove openstack related configuration files and folders
         file:
