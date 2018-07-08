@@ -310,10 +310,18 @@
           name: "{{ item }}"
           state: absent
         with_items:
+          - cliff
+          - cmd2
           - keystoneauth1
           - openstacksdk
           - os-client-config
           - os-service-types
+          - oslo.config
+          - oslo.context
+          - oslo.i18n
+          - oslo.log
+          - oslo.serialization
+          - oslo.utils
           - python-designateclient
           - python-heatclient
           - python-ironicclient
