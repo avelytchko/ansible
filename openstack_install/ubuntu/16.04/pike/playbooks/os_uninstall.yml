@@ -278,6 +278,30 @@
           - etcd
           - rabbitmq-server
 
+      - name: Uninstall openstack related packages via pip
+        pip:
+          name: "{{ item }}"
+          state: absent
+        with_items:
+          - cliff
+          - cmd2
+          - openstacksdk
+          - os-service-types
+          - oslo.config
+          - oslo.context
+          - oslo.i18n
+          - oslo.log
+          - oslo.serialization
+          - oslo.utils
+          - python-designateclient
+          - python-heatclient
+          - python-ironicclient
+          - python-magnumclient
+          - python-mistralclient
+          - python-swiftclient
+          - python-troveclient
+          - shade
+
       - name: Uninstall openstack related packages
         apt:
           name: "{{ item }}"
@@ -298,23 +322,8 @@
           - python-heatclient
           - python-ceilometerclient
           - python-barbicanclient
+          - python-pip
           - novnc
-
-      - name: Uninstall openstack related packages via pip
-        pip:
-          name: "{{ item }}"
-          state: absent
-        with_items:
-          - openstacksdk
-          - os-service-types
-          - python-designateclient
-          - python-heatclient
-          - python-ironicclient
-          - python-magnumclient
-          - python-mistralclient
-          - python-swiftclient
-          - python-troveclient
-          - shade
 
       - name: Remove openstack related configuration files and folders
         file:

@@ -278,33 +278,6 @@
           - etcd
           - rabbitmq-server
 
-      - name: Uninstall openstack related packages via apt
-        apt:
-          name: "{{ item }}"
-          state: absent
-          purge: yes
-          autoremove: yes
-        with_items:
-          - memcached
-          - etcd
-          - python-memcache
-          - python-pymemcache
-          - rabbitmq-server
-          - mariadb-server
-          - mariadb-client
-          - libdbd-mysql-perl
-          - libmysqlclient20
-          - mysql-common
-          - python-pymysql
-          - python-mysqldb
-          - python-openstackclient
-          - python-os-client-config
-          - python-swiftclient
-          - python-heatclient
-          - python-ceilometerclient
-          - python-barbicanclient
-          - novnc
-
       - name: Uninstall openstack related packages via pip
         pip:
           name: "{{ item }}"
@@ -330,6 +303,34 @@
           - python-swiftclient
           - python-troveclient
           - shade
+
+      - name: Uninstall openstack related packages via apt
+        apt:
+          name: "{{ item }}"
+          state: absent
+          purge: yes
+          autoremove: yes
+        with_items:
+          - memcached
+          - etcd
+          - python-memcache
+          - python-pymemcache
+          - rabbitmq-server
+          - mariadb-server
+          - mariadb-client
+          - libdbd-mysql-perl
+          - libmysqlclient20
+          - mysql-common
+          - python-pymysql
+          - python-mysqldb
+          - python-openstackclient
+          - python-os-client-config
+          - python-swiftclient
+          - python-heatclient
+          - python-ceilometerclient
+          - python-barbicanclient
+          - python-pip
+          - novnc
 
       - name: Remove openstack related configuration files and folders
         file:
