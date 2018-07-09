@@ -323,7 +323,7 @@
           - python-troveclient
           - shade
 
-      - name: Uninstall openstack related packages
+      - name: Uninstall openstack related packages via apt
         apt:
           name: "{{ item }}"
           state: absent
@@ -336,6 +336,10 @@
           - python-pymemcache
           - rabbitmq-server
           - mariadb-server
+          - mariadb-client
+          - libdbd-mysql-perl
+          - libmysqlclient20
+          - mysql-common
           - python-pymysql
           - python-mysqldb
           - python-openstackclient
