@@ -5,6 +5,36 @@
     become: true
     tasks:
 
+# Instances
+      - name: Check libvirt packages for removing instances
+        apt:
+          name: "{{ item }}"
+          state: present
+        with_items:
+          - "libvirt-bin"
+          - "python-libvirt"
+
+      - name: List existing openstack VMs in KVM
+        virt:
+          command: list_vms
+        register: list_vms_status
+
+      - name: Undefine existing openstack VMs in KVM
+        virt:
+          name: "{{ item }}"
+          command: undefine
+        when: "'instance-' in item"
+        with_items:
+          - "{{ list_vms_status.list_vms }}"
+
+      - name: Destroy existing openstack VMs in KVM
+        virt:
+          name: "{{ item }}"
+          state: destroyed
+        when: "'instance-' in item"
+        with_items:
+          - "{{ list_vms_status.list_vms }}"
+
 # Dashboard
       - name: Stop apache2
         service:
@@ -211,17 +241,24 @@
           - glance-registry
           - glance-api
 
+      - name: Uninstall glance-store-common
+        apt:
+          name: "glance-store-common"
+          state: absent
+          autoremove: yes
+          purge: yes
+
       - name: Uninstall glance packages
         apt:
           name: "{{ item }}"
           state: absent
           autoremove: yes
+          purge: yes
         with_items:
           - glance
           - glance-api
           - glance-common
           - glance-registry
-          - glance-store-common
           - python-glance-store
           - python-glanceclient
 
@@ -277,6 +314,11 @@
           - memcached
           - etcd
           - rabbitmq-server
+
+      - name: Check python-pip package
+        apt:
+          name: python-pip
+          state: present
 
       - name: Uninstall openstack related packages via pip
         pip:
@@ -353,6 +395,14 @@
           repo: "deb http://ubuntu-cloud.archive.canonical.com/ubuntu xenial-updates/queens main"
           state: absent
           update_cache: yes
+
+      - name: Remove useless packages from the cache
+        apt:
+          autoclean: yes
+
+      - name: Remove dependencies that are no longer required
+        apt:
+          autoremove: yes
 
       - name: Reboot server for applying changes
         shell: "shutdown -r +1 'Apply changes'"
