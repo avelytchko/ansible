@@ -45,7 +45,6 @@
         apt:
           name: openstack-dashboard
           state: absent
-          purge: yes
           autoremove: yes
 
       - name: Remove dashboard configuration files and folders
@@ -71,7 +70,6 @@
         apt:
           name: "{{ item }}"
           state: absent
-          purge: yes
           autoremove: yes
         with_items:
           - heat-api
@@ -104,7 +102,6 @@
         apt:
           name: "{{ item }}"
           state: absent
-          purge: yes
           autoremove: yes
         with_items:
           - cinder-api
@@ -145,7 +142,6 @@
         apt:
           name: "{{ item }}"
           state: absent
-          purge: yes
           autoremove: yes
         with_items:
           - neutron-common
@@ -187,7 +183,6 @@
         apt:
           name: "{{ item }}"
           state: absent
-          purge: yes
           autoremove: yes
         with_items:
           - nova-compute
@@ -220,24 +215,17 @@
           - glance-registry
           - glance-api
 
-      - name: Uninstall glance-store-common
-        apt:
-          name: "glance-store-common"
-          state: absent
-          autoremove: yes
-          purge: yes
-
       - name: Uninstall glance packages
         apt:
           name: "{{ item }}"
           state: absent
-          purge: yes
           autoremove: yes
         with_items:
           - glance
           - glance-api
           - glance-common
           - glance-registry
+          - glance-store-common
           - python-glance-store
           - python-glanceclient
 
@@ -262,7 +250,6 @@
         apt:
           name: "{{ item }}"
           state: absent
-          purge: yes
           autoremove: yes
         with_items:
           - keystone
@@ -329,7 +316,6 @@
         apt:
           name: "{{ item }}"
           state: absent
-          purge: yes
           autoremove: yes
         with_items:
           - memcached
