@@ -1,6 +1,6 @@
 ---
   - hosts: openstack
-    gather_facts: no
+    gather_facts: yes
     become: true
     environment:
       OS_USERNAME: "admin"
