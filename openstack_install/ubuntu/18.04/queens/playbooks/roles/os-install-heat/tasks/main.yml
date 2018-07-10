@@ -1,0 +1,163 @@
+---
+- name: Create database heat
+  mysql_db:
+    login_user: root
+    name: heat
+    state: present
+
+- name: Grant all privileges on heat db to user heat
+  mysql_user:
+    login_user: root
+    name: heat
+    host: "{{ item }}"
+    password: "{{ os_heat_mysql_password }}"
+    priv: 'heat.*:ALL'
+    state: present
+  with_items:
+    - "localhost"
+    - "%"
+
+- name: Create the heat user
+  os_user:
+    name: heat
+    password: "{{ os_heat_password }}"
+    domain: default
+    state: present
+
+- name: Add the admin role to the heat user and service project
+  os_user_role:
+    role: admin
+    user: heat
+    project: service
+
+- name: Create the heat service entity
+  os_keystone_service:
+    name: heat
+    service_type: orchestration
+    description: "Orchestration"
+    state: present
+
+- name: Create the heat-cfn service entity
+  os_keystone_service:
+    name: heat-cfn
+    service_type: cloudformation
+    description: "Orchestration"
+    state: present
+
+- name: Create the Orchestration service API endpoints
+  os_keystone_endpoint:
+    service: heat
+    endpoint_interface: "{{ item.endpoint_interface }}"
+    url: "http://controller:8004/v1/%(tenant_id)s"
+    region: RegionOne
+    state: present
+  with_items:
+    - { endpoint_interface: public }
+    - { endpoint_interface: internal }
+    - { endpoint_interface: admin }
+
+- name: Create the Orchestration service API endpoints
+  os_keystone_endpoint:
+    service: heat-cfn
+    endpoint_interface: "{{ item.endpoint_interface }}"
+    url: "http://controller:8000/v1"
+    region: RegionOne
+    state: present
+  with_items:
+    - { endpoint_interface: public }
+    - { endpoint_interface: internal }
+    - { endpoint_interface: admin }
+
+- name: Create the heat domain that contains projects and users for stacks
+  os_keystone_domain:
+    state: present
+    name: heat
+    description: "Stack projects and users"
+  register: heat_domain_status
+
+- debug: var=heat_domain_status
+
+- name: Create the heat_domain_admin user to manage projects and users in the heat domain
+  os_user:
+    name: heat_domain_admin
+    password: "{{ os_heat_password }}"
+    domain: heat
+    state: present
+
+- name: Add the admin role to the heat_domain_admin user in the heat domain
+  os_user_role:
+    role: admin
+    user: heat_domain_admin
+    domain: "{{ heat_domain_status.id }}"
+
+- name: Create the heat_stack_owner role
+  os_keystone_role:
+    name: heat_stack_owner
+    state: present
+
+- name: Add the heat_stack_owner role to the {{ os_keystone_demo_user }} project and user to enable stack management by the {{ os_keystone_demo_user }} user
+  os_user_role:
+    role: heat_stack_owner
+    user: "{{ os_keystone_demo_user }}"
+    project: "{{ os_keystone_demo_user }}"
+
+- name: Create the heat_stack_user role
+  os_keystone_role:
+    name: heat_stack_user
+    state: present
+
+- name: Install heat packages
+  apt:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - heat-api
+    - heat-api-cfn
+    - heat-engine
+
+- name: Populate heat config files
+  ini_file:
+    path: /etc/heat/heat.conf
+    section: "{{ item.section }}"
+    option: "{{ item.option }}"
+    value: "{{ item.value }}"
+  with_items:
+    - { section: "database", option: "connection", value: "mysql+pymysql://heat:{{ os_heat_mysql_password }}@controller/heat" }
+    - { section: "DEFAULT", option: "transport_url", value: "rabbit://openstack:{{ os_env_rabbitmq_openstack_password }}@controller" }
+    - { section: "keystone_authtoken", option: "auth_uri", value: "http://controller:5000" }
+    - { section: "keystone_authtoken", option: "auth_url", value: "http://controller:5000" }
+    - { section: "keystone_authtoken", option: "memcached_servers", value: "controller:11211" }
+    - { section: "keystone_authtoken", option: "auth_type", value: "password" }
+    - { section: "keystone_authtoken", option: "project_domain_name", value: "default" }
+    - { section: "keystone_authtoken", option: "user_domain_name", value: "default" }
+    - { section: "keystone_authtoken", option: "project_name", value: "service" }
+    - { section: "keystone_authtoken", option: "username", value: "heat" }
+    - { section: "keystone_authtoken", option: "password", value: "{{ os_heat_password }}" }
+    - { section: "trustee", option: "auth_type", value: "password" }
+    - { section: "trustee", option: "auth_url", value: "http://controller:5000" }
+    - { section: "trustee", option: "username", value: "heat" }
+    - { section: "trustee", option: "password", value: "{{ os_heat_password }}" }
+    - { section: "trustee", option: "user_domain_name", value: "default" }
+    - { section: "clients_keystone", option: "auth_uri", value: "http://controller:5000" }
+    - { section: "ec2authtoken", option: "auth_uri", value: "http://controller:5000/v3" }
+    - { section: "DEFAULT", option: "heat_metadata_server_url", value: "http://controller:8000" }
+    - { section: "DEFAULT", option: "heat_waitcondition_server_url", value: "http://controller:8000/v1/waitcondition" }
+    - { section: "DEFAULT", option: "stack_domain_admin", value: "heat_domain_admin" }
+    - { section: "DEFAULT", option: "stack_domain_admin_password", value: "{{ os_heat_password }}" }
+    - { section: "DEFAULT", option: "stack_user_domain_name", value: "heat" }
+    
+- name: Populate the Orchestration database
+  become: true
+  become_user: heat
+  vars:
+    ansible_ssh_pipelining: true
+  shell: "heat-manage db_sync"
+
+- name: Restart the Orchestration services
+  service:
+    name: "{{ item }}"
+    state: restarted
+  with_items:
+    - heat-api
+    - heat-api-cfn
+    - heat-engine
