@@ -48,7 +48,7 @@
     pkg: ubuntu-cloud-keyring
     state: present
 
-- name: Add pike repository
+- name: Add queens repository
   apt_repository:
     repo: "deb http://ubuntu-cloud.archive.canonical.com/ubuntu xenial-updates/queens main"
     update_cache: yes
