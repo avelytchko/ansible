@@ -13,9 +13,12 @@ os_glance_password=secret
 os_nova_mysql_password=secret
 os_nova_password=secret
 os_placement_password=secret
+# Possible values - linuxbridge, openvswitch
+os_neutron_driver=openvswitch
 os_neutron_mysql_password=secret
 os_neutron_password=secret
-os_neutron_provider_interface_name=eno1
+# for example: br-int for openvswitch, enp0s31f6 for linuxbridge
+os_neutron_provider_interface_name=br-int
 os_neutron_provider_network_name=public
 os_neutron_metadata_secret=secret
 os_cinder_mysql_password=secret
@@ -23,3 +26,8 @@ os_cinder_password=secret
 os_cinder_volume_group=vg_h1
 os_heat_mysql_password=secret
 os_heat_password=secret
+os_network_create=true
+os_network_provider_cidr="192.168.0.0/24"
+os_network_provider_gw="192.168.0.1"
+os_network_provider_dns=["1.1.1.1", "8.8.8.8"]
+os_network_provider_pool={"pool1": {"start": "192.168.0.2", "end": "192.168.0.254"} }
