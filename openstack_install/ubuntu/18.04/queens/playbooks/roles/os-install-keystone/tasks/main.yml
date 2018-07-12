@@ -1,4 +1,10 @@
 ---
+- name: Make sure installed python openstacksdk library is 0.12.0
+  pip:
+    name: openstacksdk
+    version: 0.12.0
+    state: present
+
 - name: Create database keystone
   mysql_db:
     login_user: root

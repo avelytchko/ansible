@@ -11,16 +11,28 @@
 - name: Create provider subnet
   os_subnet:
     name: "{{ os_neutron_provider_network_name }}-subnet"
-    allocation_pool_start: 192.168.89.1
-    allocation_pool_end: 192.168.89.254
-    cidr: 192.168.88.0/23
+    allocation_pool_start: "{{ item.value.start }}"
+    allocation_pool_end: "{{ item.value.end }}"
+    cidr: "{{ os_network_provider_cidr }}"
     dns_nameservers:
       - 1.1.1.1
       - 8.8.8.8
-    gateway_ip: 192.168.88.1
+      - 8.8.4.4
+    gateway_ip: "{{ os_network_provider_gw }}"
     enable_dhcp: yes
     network_name: "{{ os_neutron_provider_network_name }}-net"
     wait: yes
+  loop: "{{ os_network_provider_pool|dict2items }}"
+
+# - name: Add host routes to provider subnet
+#   os_subnet:
+#     name: "{{ os_neutron_provider_network_name }}-subnet"
+#     host_routes:
+#        - destination: 192.168.77.0/24
+#          nexthop: 192.168.88.1
+#     network_name: "{{ os_neutron_provider_network_name }}-net"
+#     cidr: "{{ os_network_provider_cidr }}"
+#     wait: yes
 
 - name: Create selfservice network
   os_network:
@@ -35,6 +47,7 @@
     dns_nameservers:
       - 1.1.1.1
       - 8.8.8.8
+      - 8.8.4.4
     gateway_ip: 172.16.1.1
     enable_dhcp: yes
     network_name: internal-net

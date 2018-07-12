@@ -16,9 +16,12 @@
       - { role: os-install-glance }
       - { role: os-install-nova-controller }
       - { role: os-install-nova-compute }
-      - { role: os-install-neutron-controller-lb }
-      - { role: os-install-neutron-compute-lb }
+      - { role: os-install-neutron-controller-lb, when: os_neutron_driver == "linuxbridge" }
+      - { role: os-install-neutron-compute-lb, when: os_neutron_driver == "linuxbridge" }
+      - { role: os-install-neutron-controller-ovs, when: os_neutron_driver == "openvswitch" }
+      - { role: os-install-neutron-compute-ovs, when: os_neutron_driver == "openvswitch" }
       - { role: os-install-cinder-controller }
       - { role: os-install-cinder-storage }
       - { role: os-install-heat }
       - { role: os-install-dashboard }
+      - { role: os-create-network, when: os_network_create|bool }
