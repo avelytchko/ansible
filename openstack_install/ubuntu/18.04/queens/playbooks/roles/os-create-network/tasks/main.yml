@@ -1,7 +1,7 @@
 ---
 - name: Create provider network
   os_network:
-    name: "{{ os_neutron_provider_network_name }}-net"
+    name: "{{ os_neutron_provider_network_name }}"
     external: yes
     provider_network_type: flat
     provider_physical_network: "{{ os_neutron_provider_network_name }}"
@@ -20,7 +20,7 @@
       - 8.8.4.4
     gateway_ip: "{{ os_network_provider_gw }}"
     enable_dhcp: yes
-    network_name: "{{ os_neutron_provider_network_name }}-net"
+    network_name: "{{ os_neutron_provider_network_name }}"
     wait: yes
   loop: "{{ os_network_provider_pool|dict2items }}"
 
@@ -30,7 +30,7 @@
 #     host_routes:
 #        - destination: 192.168.77.0/24
 #          nexthop: 192.168.88.1
-#     network_name: "{{ os_neutron_provider_network_name }}-net"
+#     network_name: "{{ os_neutron_provider_network_name }}"
 #     cidr: "{{ os_network_provider_cidr }}"
 #     wait: yes
 
@@ -58,5 +58,5 @@
     name: internal-router
     interfaces:
       - internal-subnet
-    network: "{{ os_neutron_provider_network_name }}-net"
+    network: "{{ os_neutron_provider_network_name }}"
     wait: yes
