@@ -11,4 +11,4 @@
       OS_AUTH_URL: "http://controller:5000/v3"
       OS_IDENTITY_API_VERSION: "3"
     roles:
-      - { role: os-install-neutron-controller-lb }
+      - { role: os-install-neutron-controller }
