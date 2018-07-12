@@ -1,10 +1,4 @@
 ---
-- name: Make sure installed python openstacksdk library is 0.12.0
-  pip:
-    name: openstacksdk
-    version: 0.12.0
-    state: present
-
 - name: Create database keystone
   mysql_db:
     login_user: root
@@ -85,11 +79,14 @@
     name: python-pip
     state: present
 
-- name: Install python-shade for os ansible module
+- name: Install dependencies for os ansible module
   pip:
-    name: shade
-    version: 1.11.0
+    name: "{{ item.name }}"
+    version: "{{ item.version }}"
     state: present
+  with_items:
+    - { name: "shade", version: "1.11.0" }
+    - { name: "openstacksdk", version: "0.12.0" }
 
 - name: Create service project
   os_project:
