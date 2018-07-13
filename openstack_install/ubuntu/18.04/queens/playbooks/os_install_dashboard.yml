@@ -1,0 +1,6 @@
+---
+  - hosts: openstack
+    gather_facts: yes
+    become: true
+    roles:
+      - { role: os-install-dashboard }

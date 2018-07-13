@@ -1,0 +1,16 @@
+[Unit]
+Description=Starts and stops L2J login server
+Requires=mysql.service
+Before=l2jgs.service
+After=mysql.service
+
+[Service]
+Type=simple
+User=l2j
+Group=l2j
+WorkingDirectory={{ l2j_server_dir }}/server/login
+ExecStart=/bin/bash -c "/usr/bin/java -Xms128m -Xmx256m -jar l2jlogin.jar >> /var/log/l2j/l2jgs.log 2>&1"
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,118 @@
+---
+- name: Create database keystone
+  mysql_db:
+    login_user: root
+    name: keystone
+    state: present
+
+- name: Grant all privileges on keystone db to user keystone
+  mysql_user:
+    login_user: root
+    name: keystone
+    host: "{{ item }}"
+    password: "{{ os_keystone_mysql_password }}"
+    priv: 'keystone.*:ALL'
+    state: present
+  with_items:
+    - "localhost"
+    - "%"
+
+- name: Install keystone packages
+  apt:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - keystone
+    - apache2
+    - libapache2-mod-wsgi
+
+- name: Populate keystone.conf config file
+  ini_file:
+    path: /etc/keystone/keystone.conf
+    section: "{{ item.section }}"
+    option: "{{ item.option }}"
+    value: "{{ item.value }}"
+  with_items:
+    - { section: "database", option: "connection", value: "mysql+pymysql://keystone:{{ os_keystone_mysql_password }}@controller/keystone" }
+    - { section: "token", option: "provider", value: "fernet" }
+  register: keystone_conf_file_status
+  
+- name: Populate the Identity service database
+  become: true
+  become_user: keystone
+  vars:
+    ansible_ssh_pipelining: true
+  shell: "keystone-manage db_sync"
+
+- name: Initialize Fernet key repositories
+  shell: "{{ item }}"
+  with_items:
+    - "keystone-manage fernet_setup --keystone-user keystone --keystone-group keystone"
+    - "keystone-manage credential_setup --keystone-user keystone --keystone-group keystone"
+
+- name: Bootstrap the Identity service
+  shell: "keystone-manage bootstrap --bootstrap-password {{ os_keystone_admin_password }} --bootstrap-admin-url http://controller:5000/v3/ --bootstrap-internal-url http://controller:5000/v3/ --bootstrap-public-url http://controller:5000/v3/ --bootstrap-region-id RegionOne"
+
+- name: Populate apache2.conf config file
+  lineinfile:
+    path: /etc/apache2/apache2.conf
+    regexp: '^ServerName'
+    line: 'ServerName controller'
+  register: apache2_conf_file_status
+
+- name: Restart apache2
+  service:
+    name: apache2
+    state: restarted
+
+- name: Populate and place on home dir the client env scripts
+  template:
+    src: "{{ item.template_name }}"
+    dest: "{{ lookup('env','HOME') }}/{{ item.file_name }}"
+    mode: 0644
+  with_items:
+    - { template_name: "admin-openrc.j2", file_name: "admin-openrc" }
+    - { template_name: "demo-openrc.j2", file_name: "{{ os_keystone_demo_user }}-openrc" }
+
+- name: Install python pip
+  apt:
+    name: python-pip
+    state: present
+
+- name: Install python-shade for os ansible module
+  pip:
+    name: shade
+    version: 1.11.0
+    state: present
+
+- name: Create service project
+  os_project:
+    name: service
+    domain_id: default
+    state: present
+    description: "Service Project"
+
+- name: Create {{ os_keystone_demo_user }} project
+  os_project:
+    name: "{{ os_keystone_demo_user }}"
+    domain_id: default
+    state: present
+    description: "{{ os_keystone_demo_user|title }} Project"
+
+- name: Create {{ os_keystone_demo_user }} user
+  os_user:
+    name: "{{ os_keystone_demo_user }}"
+    password: "{{ os_keystone_demo_password }}"
+    domain: default
+    state: present
+
+- name: Create user role
+  os_keystone_role:
+    name: user
+    state: present
+
+- name: Add {{ os_keystone_demo_user }} to role user
+  os_user_role:
+    role: user
+    user: "{{ os_keystone_demo_user }}"
+    project: "{{ os_keystone_demo_user }}"

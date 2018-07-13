@@ -1,0 +1,49 @@
+---
+- name: Create provider network
+  os_network:
+    name: "{{ os_neutron_provider_network_name }}-net"
+    external: yes
+    provider_network_type: flat
+    provider_physical_network: "{{ os_neutron_provider_network_name }}"
+    shared: yes
+    wait: yes
+
+- name: Create provider subnet
+  os_subnet:
+    name: "{{ os_neutron_provider_network_name }}-subnet"
+    allocation_pool_start: 192.168.89.1
+    allocation_pool_end: 192.168.89.254
+    cidr: 192.168.88.0/23
+    dns_nameservers:
+      - 1.1.1.1
+      - 8.8.8.8
+    gateway_ip: 192.168.88.1
+    enable_dhcp: yes
+    network_name: "{{ os_neutron_provider_network_name }}-net"
+    wait: yes
+
+- name: Create selfservice network
+  os_network:
+    name: internal-net
+    shared: yes
+    wait: yes
+
+- name: Create selfservice subnet
+  os_subnet:
+    name: internal-subnet
+    cidr: 172.16.1.0/24
+    dns_nameservers:
+      - 1.1.1.1
+      - 8.8.8.8
+    gateway_ip: 172.16.1.1
+    enable_dhcp: yes
+    network_name: internal-net
+    wait: yes
+
+- name: Create router for selfservice subnet
+  os_router:
+    name: internal-router
+    interfaces:
+      - internal-subnet
+    network: "{{ os_neutron_provider_network_name }}-net"
+    wait: yes

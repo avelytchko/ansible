@@ -1,0 +1,122 @@
+---
+- name: Create the cinder database
+  mysql_db:
+    login_user: root
+    name: cinder
+    state: present
+
+- name: Grant proper access to the cinder database
+  mysql_user:
+    login_user: root
+    name: cinder
+    host: "{{ item }}"
+    password: "{{ os_cinder_mysql_password }}"
+    priv: 'cinder.*:ALL'
+    state: present
+  with_items:
+    - "localhost"
+    - "%"
+
+- name: Create the cinder user
+  os_user:
+    name: cinder
+    password: "{{ os_cinder_password }}"
+    domain: default
+    state: present
+
+- name: Add the admin role to the cinder user
+  os_user_role:
+    role: admin
+    user: cinder
+    project: service
+
+- name: Create the cinderv2 and cinderv3 service entities
+  os_keystone_service:
+    name: "{{ item.name }}"
+    service_type: "{{ item.service_type }}"
+    description: "OpenStack Block Storage"
+    state: present
+  with_items:
+    - { name: "cinderv2", service_type: "volumev2" }
+    - { name: "cinderv3", service_type: "volumev3" }
+
+- name: Create the Block Storage v2 service API endpoints
+  os_keystone_endpoint:
+    service: cinderv2
+    endpoint_interface: "{{ item.endpoint_interface }}"
+    url: "http://controller:8776/v2/%(project_id)s"
+    region: RegionOne
+    state: present
+  with_items:
+    - { endpoint_interface: public }
+    - { endpoint_interface: internal }
+    - { endpoint_interface: admin }
+
+- name: Create the Block Storage v3 service API endpoints
+  os_keystone_endpoint:
+    service: cinderv3
+    endpoint_interface: "{{ item.endpoint_interface }}"
+    url: "http://controller:8776/v3/%(project_id)s"
+    region: RegionOne
+    state: present
+  with_items:
+    - { endpoint_interface: public }
+    - { endpoint_interface: internal }
+    - { endpoint_interface: admin }
+
+- name: Install cinder packages
+  apt:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - cinder-api
+    - cinder-scheduler
+
+- name: Populate cinder config file
+  ini_file:
+    path: /etc/cinder/cinder.conf
+    section: "{{ item.section }}"
+    option: "{{ item.option }}"
+    value: "{{ item.value }}"
+  with_items:
+    - { section: "database", option: "connection", value: "mysql+pymysql://cinder:{{ os_cinder_mysql_password }}@controller/cinder" }
+    - { section: "DEFAULT", option: "transport_url", value: "rabbit://openstack:{{ os_env_rabbitmq_openstack_password }}@controller" }
+    - { section: "DEFAULT", option: "auth_strategy", value: "keystone" }
+    - { section: "keystone_authtoken", option: "auth_uri", value: "http://controller:5000" }
+    - { section: "keystone_authtoken", option: "auth_url", value: "http://controller:5000" }
+    - { section: "keystone_authtoken", option: "memcached_servers", value: "controller:11211" }
+    - { section: "keystone_authtoken", option: "auth_type", value: "password" }
+    - { section: "keystone_authtoken", option: "project_domain_name", value: "default" }
+    - { section: "keystone_authtoken", option: "user_domain_name", value: "default" }
+    - { section: "keystone_authtoken", option: "project_name", value: "service" }
+    - { section: "keystone_authtoken", option: "username", value: "cinder" }
+    - { section: "keystone_authtoken", option: "password", value: "{{ os_cinder_password }}" }
+    - { section: "DEFAULT", option: "my_ip", value: "{{ os_management_ip }}" }
+    - { section: "oslo_concurrency", option: "lock_path", value: "/var/lib/cinder/tmp" }
+  register: cinder_conf_file_status
+
+- name: Populate the Block Storage database
+  become: true
+  become_user: cinder
+  vars:
+    ansible_ssh_pipelining: true
+  shell: "cinder-manage db sync"
+
+- name: Populate nova config file
+  ini_file:
+    path: /etc/nova/nova.conf
+    section: "{{ item.section }}"
+    option: "{{ item.option }}"
+    value: "{{ item.value }}"
+  with_items:
+    - { section: "cinder", option: "os_region_name", value: "RegionOne" }
+  register: nova_cinder_conf_file_status
+
+- name: Restart the Compute API, Block Storage and Apache services
+  service:
+    name: "{{ item }}"
+    state: restarted
+  with_items:
+    - nova-api
+    - cinder-scheduler
+    - apache2

@@ -1,0 +1,72 @@
+---
+  - name: Check if image exists in Glance
+    shell: "source {{ os_client_project_script }} && openstack image list -f value -c Name | grep -w '^{{ os_image_name }}$' | wc -l"
+    register: os_image_glance_status
+    args:
+      executable: /bin/bash
+
+  - name: Get image name
+    set_fact:
+      os_image_file_name: "{{ os_image_url|basename }}"
+
+  - name: Check if image file already exists
+    stat:
+      path: "{{ os_image_file_path }}/{{ os_image_file_name }}"
+      get_md5: no
+      get_checksum: no
+    register: os_image_file_name_status
+
+  - block:
+    - name: View image status in Glance
+      debug: msg="Image file already exists in Glance. Skipping uploading."
+      when: "os_image_glance_status.stdout|int != 0"
+
+    - name: View image name
+      debug: msg="Image name is {{ os_image_file_name }}"
+      when: "os_image_glance_status.stdout|int == 0"
+
+    - name: View image file status
+      debug: msg="Image file already exists in {{ os_image_file_path }}/{{ os_image_file_name }}. Skipping downloading."
+      when: "os_image_glance_status.stdout|int == 0 and os_image_file_name_status.stat.exists != False"
+
+    - name: Create directory for storing image
+      file:
+        path: "{{ os_image_file_path }}"
+        state: directory
+
+    - name: Download image for Glance
+      get_url:
+        url: "{{ os_image_url }}"
+        dest: "{{ os_image_file_path }}"
+      when: "os_image_glance_status.stdout|int == 0 and os_image_file_name_status.stat.exists == False"
+
+    - name: Upload image to Glance
+      shell: "source {{ os_client_project_script }} && openstack image create {{ os_image_name }} --file {{ os_image_file_path }}/{{ os_image_file_name }} --disk-format qcow2 --container-format bare"
+      when: "os_image_glance_status.stdout|int == 0"
+      args:
+        executable: /bin/bash
+
+    - name: Check upload status of image in Glance
+      shell: "source {{ os_client_project_script }} && openstack image list -f value -c Name -c Status | grep -w '^{{ os_image_name }}' | awk '{ print $2 }'"
+      when: "os_image_glance_status.stdout|int == 0"
+      register: os_image_status
+      until: "'active' in os_image_status.stdout"
+      retries: 10
+      args:
+        executable: /bin/bash
+    when: "os_image_remove|default(False)|bool == False"
+
+  - block:
+    - name: Delete image locally if exists
+      file:
+        path: "{{ os_image_file_path }}/{{ os_image_file_name }}"
+        state: absent
+      when: "os_image_file_name_status.stat.exists == True"
+
+    - name: Delete image from Glance
+      shell: "source {{ os_client_project_script }} && openstack image delete {{ os_image_name }}"
+      when: "os_image_glance_status.stdout|int != 0"
+      args:
+        executable: /bin/bash
+    when: "os_image_remove|default(False)|bool == True"
+    

@@ -1,0 +1,27 @@
+---
+  - block:
+
+    - name: Scan instance fingerprint
+      shell: "ssh-keyscan {{ inventory_hostname }}"
+      register: host_key
+
+    - debug: var=host_key
+
+    - name: Add fingerprint to known_hosts
+      lineinfile:
+        dest: "{{ lookup('env', 'HOME') }}/.ssh/known_hosts"
+        line: "{{ item }}"
+        create: yes
+        state: present
+        mode: 0600
+      with_items: "{{ host_key.stdout }}"
+      when: "host_key.stdout != ''"
+
+    - name: Remove fingerprint from known_hosts
+      known_hosts:
+        path: "{{ lookup('env','HOME') }}/.ssh/known_hosts"
+        name: "{{ inventory_hostname }}"
+        state: absent
+      when: "host_key_remove|default(False)|bool == True"
+
+    delegate_to: localhost

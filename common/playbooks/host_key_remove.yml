@@ -1,0 +1,5 @@
+---
+  - hosts: l2j
+    gather_facts: no
+    roles:
+      - { role: host-key, host_key_remove: True }

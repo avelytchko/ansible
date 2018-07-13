@@ -1,0 +1,420 @@
+---
+  - hosts: openstack
+    gather_facts: no
+    ignore_errors: yes
+    become: true
+    tasks:
+
+# Instances
+      - name: Check libvirt packages for removing instances
+        apt:
+          name: "{{ item }}"
+          state: present
+        with_items:
+          - "libvirt-bin"
+          - "python-libvirt"
+
+      - name: List existing openstack VMs in KVM
+        virt:
+          command: list_vms
+        register: list_vms_status
+
+      - name: Undefine existing openstack VMs in KVM
+        virt:
+          name: "{{ item }}"
+          command: undefine
+        when: "'instance-' in item"
+        with_items:
+          - "{{ list_vms_status.list_vms }}"
+
+      - name: Destroy existing openstack VMs in KVM
+        virt:
+          name: "{{ item }}"
+          state: destroyed
+        when: "'instance-' in item"
+        with_items:
+          - "{{ list_vms_status.list_vms }}"
+
+# Dashboard
+      - name: Stop apache2
+        service:
+          name: apache2
+          state: stopped
+
+      - name: Uninstall dashboard package
+        apt:
+          name: openstack-dashboard
+          state: absent
+          purge: yes
+          autoremove: yes
+
+      - name: Remove dashboard configuration files and folders
+        file:
+          path: "{{ item }}"
+          state: absent
+        with_items:
+          - "/etc/openstack-dashboard/"
+          - "/etc/apache2/conf-available/openstack-dashboard.conf"
+          - "/var/lib/openstack-dashboard/"
+
+# Heat
+      - name: Stop the Orchestration services
+        service:
+          name: "{{ item }}"
+          state: stopped
+        with_items:
+          - heat-api
+          - heat-api-cfn
+          - heat-engine
+
+      - name: Uninstall heat packages
+        apt:
+          name: "{{ item }}"
+          state: absent
+          purge: yes
+          autoremove: yes
+        with_items:
+          - heat-api
+          - heat-api-cfn
+          - heat-common
+          - heat-engine
+          - python-heat
+          - python-heatclient
+
+      - name: Remove cinder configuration files and folders
+        file:
+          path: "{{ item }}"
+          state: absent
+        with_items:
+          - "/etc/heat/"
+          - "/var/lib/heat/"
+          - "/var/log/heat/"
+
+# Cinder
+      - name: Stop the Block Storage volume service including its dependencies
+        service:
+          name: "{{ item }}"
+          state: stopped
+        with_items:
+          - tgt
+          - cinder-volume
+          - cinder-scheduler
+
+      - name: Uninstall cinder packages
+        apt:
+          name: "{{ item }}"
+          state: absent
+          purge: yes
+          autoremove: yes
+        with_items:
+          - cinder-api
+          - cinder-common
+          - cinder-scheduler
+          - cinder-volume
+          - python-cinderclient
+
+      - name: Remove cinder configuration files and folders
+        file:
+          path: "{{ item }}"
+          state: absent
+        with_items:
+          - "/etc/cinder/"
+          - "/var/lib/cinder/"
+          - "/var/log/cinder/"
+
+      - name: Remove cinder logical volume pool
+        lvol:
+          vg: "{{ os_cinder_volume_group }}"
+          lv: "{{ os_cinder_volume_group }}-pool"
+          state: absent
+          force: yes
+
+# Neutron
+      - name: Stop neutron services
+        service:
+          name: "{{ item }}"
+          state: stopped
+        with_items:
+          - neutron-server
+          - neutron-linuxbridge-agent
+          - neutron-dhcp-agent
+          - neutron-metadata-agent
+          - neutron-l3-agent
+
+      - name: Uninstall neutron packages
+        apt:
+          name: "{{ item }}"
+          state: absent
+          purge: yes
+          autoremove: yes
+        with_items:
+          - neutron-common
+          - neutron-server
+          - neutron-plugin-ml2
+          - neutron-linuxbridge-agent
+          - neutron-l3-agent
+          - neutron-dhcp-agent
+          - neutron-metadata-agent
+          - python-neutronclient
+          - python-neutron-fwaas
+          - python-neutron-lib
+          - python-neutronclient
+        register: neutron_packages_status
+
+      - name: Remove neutron configuration files and folders
+        file:
+          path: "{{ item }}"
+          state: absent
+        with_items:
+          - "/etc/neutron/"
+          - "/var/lib/neutron/"
+          - "/var/log/neutron/"
+
+# Nova
+      - name: Stop nova services
+        service:
+          name: "{{ item }}"
+          state: stopped
+        with_items:
+          - nova-compute
+          - nova-api
+          - nova-consoleauth
+          - nova-scheduler
+          - nova-conductor
+          - nova-novncproxy
+
+      - name: Uninstall nova packages
+        apt:
+          name: "{{ item }}"
+          state: absent
+          purge: yes
+          autoremove: yes
+        with_items:
+          - nova-compute
+          - nova-common
+          - nova-compute-kvm
+          - nova-api
+          - nova-conductor
+          - nova-consoleauth
+          - nova-novncproxy
+          - nova-scheduler
+          - nova-placement-api
+          - python-novaclient
+          - python-novnc
+
+      - name: Remove nova configuration files and folders
+        file:
+          path: "{{ item }}"
+          state: absent
+        with_items:
+          - "/etc/nova/"
+          - "/var/lib/nova/"
+          - "/var/log/nova/"
+
+# Glance
+      - name: Stop glance services
+        service:
+          name: "{{ item }}"
+          state: stopped
+        with_items:
+          - glance-registry
+          - glance-api
+
+      - name: Uninstall glance-store-common
+        apt:
+          name: "glance-store-common"
+          state: absent
+          autoremove: yes
+          purge: yes
+
+      - name: Uninstall glance packages
+        apt:
+          name: "{{ item }}"
+          state: absent
+          purge: yes
+          autoremove: yes
+        with_items:
+          - glance
+          - glance-api
+          - glance-common
+          - glance-registry
+          - python-glance-store
+          - python-glanceclient
+
+      - name: Remove glance configuration files and folders
+        file:
+          path: "{{ item }}"
+          state: absent
+        with_items:
+          - "/etc/glance/"
+          - "/var/lib/glance/"
+          - "/var/log/glance/"
+
+# Keystone
+      - name: Stop keystone services
+        service:
+          name: "{{ item }}"
+          state: stopped
+        with_items:
+          - apache2
+
+      - name: Uninstall keystone packages
+        apt:
+          name: "{{ item }}"
+          state: absent
+          purge: yes
+          autoremove: yes
+        with_items:
+          - keystone
+          - apache2
+          - libapache2-mod-wsgi
+          - python-keystoneclient
+          - python-keystoneauth1
+          - python-keystonemiddleware
+
+      - name: Remove keystone configuration files and folders
+        file:
+          path: "{{ item }}"
+          state: absent
+        with_items:
+          - "/etc/keystone/"
+          - "/etc/apache2/"
+          - "/var/log/keystone/"
+          - "/var/log/apache2/"
+          - "/var/lib/apache2/"
+
+# Environment
+      - name: Stop openstack related services
+        service:
+          name: "{{ item }}"
+          state: stopped
+        with_items:
+          - mysql
+          - memcached
+          - etcd
+          - rabbitmq-server
+
+      - name: Check python-pip package
+        apt:
+          name: python-pip
+          state: present
+
+      - name: Uninstall openstack related packages via pip
+        pip:
+          name: "{{ item }}"
+          state: absent
+        with_items:
+          - cliff
+          - cmd2
+          - openstacksdk
+          - os-service-types
+          - oslo.config
+          - oslo.context
+          - oslo.i18n
+          - oslo.log
+          - oslo.serialization
+          - oslo.utils
+          - python-designateclient
+          - python-heatclient
+          - python-ironicclient
+          - python-magnumclient
+          - python-mistralclient
+          - python-swiftclient
+          - python-troveclient
+          - shade
+
+      - name: Uninstall openstack related packages via apt
+        apt:
+          name: "{{ item }}"
+          state: absent
+          purge: yes
+          autoremove: yes
+        with_items:
+          - libvirt-bin
+          - memcached
+          - python-memcache
+          - python-pymemcache
+          - rabbitmq-server
+          - mariadb-server
+          - mariadb-client
+          - libdbd-mysql-perl
+          - libmysqlclient20
+          - mysql-common
+          - python-pymysql
+          - python-mysqldb
+          - python-openstackclient
+          - python-os-client-config
+          - python-swiftclient
+          - python-heatclient
+          - python-ceilometerclient
+          - python-barbicanclient
+          - python-libvirt
+          - python-pip
+          - novnc
+
+      - name: Remove openstack related configuration files and folders
+        file:
+          path: "{{ item }}"
+          state: absent
+        with_items:
+          - "/etc/etcd/"
+          - "/var/lib/etcd/"
+          - "/var/lib/rabbitmq/"
+          - "/var/log/rabbitmq/"
+          - "/var/lib/mysql/"
+          - "/var/log/mysql/"
+          - "/usr/bin/etcd"
+          - "/usr/bin/etcdctl"
+          - "/lib/systemd/system/etcd.service"
+          - "/etc/mysql/"
+
+      - name: Remove user etcd
+        user:
+          name: etcd
+          state: absent
+
+      - name: Remove group etcd
+        group:
+          name: etcd
+          state: absent
+
+      - name: Remove pike repository
+        apt_repository:
+          repo: "deb http://ubuntu-cloud.archive.canonical.com/ubuntu xenial-updates/pike main"
+          state: absent
+          update_cache: yes
+
+      - name: Remove useless packages from the cache
+        apt:
+          autoclean: yes
+
+      - name: Remove dependencies that are no longer required
+        apt:
+          autoremove: yes
+
+      - name: Reboot server for applying changes
+        shell: "shutdown -r +1 'Apply changes'"
+        register: reboot_status
+        until: reboot_status.rc == 0
+        retries: 6
+        delay: 10
+        when: neutron_packages_status.changed
+
+      - name: Waiting for server to shutdown
+        local_action: wait_for
+        args:
+          host: "{{ inventory_hostname }}"
+          port: 22
+          state: stopped
+          timeout: 300
+        when: neutron_packages_status.changed
+
+      - name: Waiting for server to boot
+        local_action: wait_for
+        args:
+          host: "{{ inventory_hostname }}"
+          port: 22
+          state: started
+          delay: 30
+          timeout: 300
+        when: neutron_packages_status.changed
