@@ -24,19 +24,9 @@
     wait: yes
   loop: "{{ os_network_provider_pool|dict2items }}"
 
-# - name: Add host routes to provider subnet
-#   os_subnet:
-#     name: "{{ os_neutron_provider_network_name }}-subnet"
-#     host_routes:
-#        - destination: 192.168.77.0/24
-#          nexthop: 192.168.88.1
-#     network_name: "{{ os_neutron_provider_network_name }}"
-#     cidr: "{{ os_network_provider_cidr }}"
-#     wait: yes
-
 - name: Create selfservice network
   os_network:
-    name: internal-net
+    name: internal
     shared: yes
     wait: yes
 
@@ -50,7 +40,7 @@
       - 8.8.4.4
     gateway_ip: 172.16.1.1
     enable_dhcp: yes
-    network_name: internal-net
+    network_name: internal
     wait: yes
 
 - name: Create router for selfservice subnet
