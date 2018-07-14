@@ -13,6 +13,7 @@
     with_items:
       - nova-compute-lxd
       - zfsutils-linux
+    register: nova_compute_lxd_status
 
   - name: Add nova user to group lxd
     user:
@@ -22,6 +23,7 @@
 
   - name: Initialize lxd
     shell: "lxd init --auto --storage-backend=zfs"
+    when: nova_compute_lxd_status.changed
 
   - name: Populate nova-cmpute.conf config file
     ini_file:
