@@ -4,6 +4,36 @@
     name: nova-compute
     state: present
 
+- block:
+
+  - name: Install nova lxd related packages
+    apt:
+      name: "{{ item }}"
+      state: present
+    with_items:
+      - nova-compute-lxd
+      - zfsutils-linux
+
+  - name: Add nova user to group lxd
+    user:
+      name: nova
+      groups: lxd
+      append: yes
+
+  - name: Initialize lxd
+    shell: "lxd init --auto --storage-backend=zfs"
+
+  - name: Populate nova-cmpute.conf config file
+    ini_file:
+      path: /etc/nova/nova-compute.conf
+      section: "{{ item.section }}"
+      option: "{{ item.option }}"
+      value: "{{ item.value }}"
+    with_items:
+      - { section: "lxd", option: "pool", value: "default" }
+
+  when: "os_nova_hypervisor == 'lxd'"
+
 - name: Populate nova.conf config file
   ini_file:
     path: /etc/nova/nova.conf
@@ -39,7 +69,6 @@
     - { section: "placement", option: "auth_url", value: "http://controller:5000/v3" }
     - { section: "placement", option: "username", value: "placement" }
     - { section: "placement", option: "password", value: "{{ os_placement_password }}" }
-  register: nova_compute_conf_file_status
 
 - name: Due to a packaging bug, remove the log_dir option
   ini_file:
