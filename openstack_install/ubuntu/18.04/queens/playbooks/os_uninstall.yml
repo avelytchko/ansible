@@ -190,10 +190,10 @@
           autoremove: yes
           purge: yes
         with_items:
+          - nova-api
           - nova-compute
           - nova-common
           - nova-compute-kvm
-          - nova-api
           - nova-conductor
           - nova-consoleauth
           - nova-novncproxy
@@ -208,6 +208,7 @@
           state: absent
         with_items:
           - "/etc/nova/"
+          - "/etc/zfs/"
           - "/var/lib/nova/"
           - "/var/log/nova/"
 
@@ -332,6 +333,7 @@
           - galera
           - libdbd-mysql-perl
           - libmysqlclient20
+          - libzfs2linux
           - mariadb-common
           - mariadb-server
           - mariadb-client
@@ -351,6 +353,8 @@
           - python-pymemcache
           - python-pip
           - rabbitmq-server
+          - zfsutils-linux
+          - zfs-zed
 
       - name: Remove openstack related configuration files and folders
         file:
