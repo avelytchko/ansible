@@ -21,11 +21,23 @@
       groups: lxd
       append: yes
 
+  - name: Create temporary directory for lxd preseed
+    tempfile:
+      state: directory
+      suffix: preseed_lxd
+    register: preseed_lxd_dir
+
+  - name: Populate and place preseed for lxd
+    template:
+      src: "preseed.yml.j2"
+      dest: "{{ preseed_lxd_dir.path }}/preseed.yml"
+      mode: 0644
+
   - name: Initialize lxd
-    shell: "lxd init --auto --storage-backend=zfs"
+    shell: "cat {{ preseed_lxd_dir.path }}/preseed.yml | lxd init --preseed"
     when: nova_compute_lxd_status.changed
 
-  - name: Populate nova-cmpute.conf config file
+  - name: Populate nova-compute.conf config file
     ini_file:
       path: /etc/nova/nova-compute.conf
       section: "{{ item.section }}"
