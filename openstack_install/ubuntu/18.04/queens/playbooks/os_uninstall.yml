@@ -190,8 +190,14 @@
           autoremove: yes
           purge: yes
         with_items:
+          - liblxc-common
+          - liblxc1
+          - lxcfs
+          - lxd
+          - lxd-client
           - nova-api
           - nova-compute
+          - nova-compute-lxd
           - nova-common
           - nova-compute-kvm
           - nova-conductor
@@ -209,6 +215,7 @@
         with_items:
           - "/etc/nova/"
           - "/etc/zfs/"
+          - "/var/lib/lxd/"
           - "/var/lib/nova/"
           - "/var/log/nova/"
 
