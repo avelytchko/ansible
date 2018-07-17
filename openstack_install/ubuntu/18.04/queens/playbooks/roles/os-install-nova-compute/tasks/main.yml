@@ -11,6 +11,8 @@
       name: "{{ item }}"
       state: present
     with_items:
+      - lxd
+      - lxd-client
       - nova-compute-lxd
       - zfsutils-linux
     register: nova_compute_lxd_status
@@ -21,20 +23,46 @@
       groups: lxd
       append: yes
 
+  - name: Change kernel parameters for LXD
+    sysctl:
+      name: "{{ item.name }}"
+      value: "{{ item.value }}"
+      state: present
+    with_items:
+      - { name: "fs.inotify.max_queued_events", value: "1048576" }
+      - { name: "fs.inotify.max_user_instances", value: "1048576" }
+      - { name: "fs.inotify.max_user_watches", value: "1048576" }
+      - { name: "vm.max_map_count", value: "262144" }
+      - { name: "vm.swappiness", value: "1" }
+
   - name: Create temporary directory for lxd preseed
     tempfile:
       state: directory
       suffix: preseed_lxd
     register: preseed_lxd_dir
 
-  - name: Populate and place preseed for lxd
+  - name: Populate and place preseed for lxd dir
     template:
       src: "preseed.yml.j2"
-      dest: "{{ preseed_lxd_dir.path }}/preseed.yml"
+      dest: "{{ preseed_lxd_dir.path }}/preseed-dir.yml"
       mode: 0644
+    with_items:
+      - { storage_pool_driver: "dir" }
 
-  - name: Initialize lxd
-    shell: "cat {{ preseed_lxd_dir.path }}/preseed.yml | lxd init --preseed"
+  - name: Populate and place preseed for lxd dir
+    template:
+      src: "preseed.yml.j2"
+      dest: "{{ preseed_lxd_dir.path }}/preseed-zfs.yml"
+      mode: 0644
+    with_items:
+      - { storage_pool_driver: "zfs" }
+
+  - name: Initialize lxd for dir storage
+    shell: "cat {{ preseed_lxd_dir.path }}/preseed-dir.yml | lxd init --preseed"
+    when: nova_compute_lxd_status.changed
+
+  - name: Initialize lxd for zfs storage
+    shell: "cat {{ preseed_lxd_dir.path }}/preseed-zfs.yml | lxd init --preseed"
     when: nova_compute_lxd_status.changed
 
   - name: Populate nova-compute.conf config file

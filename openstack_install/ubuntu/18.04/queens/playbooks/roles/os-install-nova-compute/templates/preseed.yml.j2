@@ -1,5 +1,22 @@
 config: {}
 cluster: null
+{% if item.storage_pool_driver == 'dir' %}
+networks: []
+storage_pools:
+- config: {}
+  description: ""
+  name: temporary
+  driver: dir
+profiles:
+- config: {}
+  description: ""
+  devices:
+    root:
+      path: /
+      pool: temporary
+      type: disk
+  name: default
+{% else %}
 networks:
 - config:
     ipv4.address: auto
@@ -28,3 +45,4 @@ profiles:
       pool: default
       type: disk
   name: default
+{% endif %}
