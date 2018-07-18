@@ -41,7 +41,7 @@
       when: "os_image_glance_status.stdout|int == 0 and os_image_file_name_status.stat.exists == False"
 
     - name: Upload image to Glance
-      shell: "source {{ os_client_project_script }} && openstack image create {{ os_image_name }} --file {{ os_image_file_path }}/{{ os_image_file_name }} --disk-format qcow2 --container-format bare"
+      shell: "source {{ os_client_project_script }} && openstack image create {{ os_image_name }} --file {{ os_image_file_path }}/{{ os_image_file_name }} --disk-format {{ image_disk_format }} --container-format bare"
       when: "os_image_glance_status.stdout|int == 0"
       args:
         executable: /bin/bash
