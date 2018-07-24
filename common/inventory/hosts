@@ -1,2 +1,7 @@
 [openstack]
 host.example.com
+
+[openstack:vars]
+mgmt_eth_name=enp3s0
+ovs_bridge_name=br-ex
+ovs_port_name=enp0s31f6
