@@ -1,8 +1,10 @@
 ---
   - hosts: openstack
-    gather_facts: no
+    gather_facts: yes
     become: true
     tasks:
+
+      - debug: var=ansible_distribution
 
       - name: Install packages
         apt:
@@ -32,6 +34,7 @@
         with_items:
           - ondemand
           - systemd-resolved
+        when: "ansible_distribution == 'Ubuntu'"
 
       - name: Create ovs bridge
         openvswitch_bridge:
@@ -43,16 +46,6 @@
           bridge: "{{ ovs_bridge_name }}"
           port: "{{ ovs_port_name }}"
           state: present
-
-      - name: Change network config file
-        interfaces_file:
-          iface: "{{ mgmt_eth_name }}"
-          option: "{{ item.option }}"
-          value: "{{ item.value }}"
-          backup: yes
-          state: present
-        with_items:
-          - { option: "metric", value: "10" }
 
       - name: Populate network configuration
         blockinfile:
@@ -74,6 +67,13 @@
               post-up route add -net 192.168.77.0 netmask 255.255.255.0 gw 192.168.88.1
               metric 100
 
+      - name: Add openvswitch-switch.service dependency to networking.service
+        replace:
+          path: /lib/systemd/system/networking.service
+          regexp: '^(After=.*systemd-modules-load.service)$'
+          replace: '\1 openvswitch-switch.service'
+        when: "ansible_distribution == 'Debian'"
+
       - name: Restart networking service
         service:
           name: networking
@@ -84,15 +84,25 @@
           path: /etc/udev/rules.d/50-hdparm.rules
           create: yes
           block: |
-            ACTION=="add", SUBSYSTEM=="block", KERNEL=="sdb", RUN+="/sbin/hdparm -B 255 -S 0 /dev/sdb
+            ACTION=="add", SUBSYSTEM=="block", KERNEL=="sdb", RUN+="/sbin/hdparm -B 255 -S 0 /dev/sdb"
 
       - name: Change grub cmd parameters
         lineinfile:
           state: present
           dest: /etc/default/grub
           regexp: "GRUB_CMDLINE_LINUX_DEFAULT=.*$"
-          line: "GRUB_CMDLINE_LINUX_DEFAULT=\"processor.max_cstate=0 intel_idle.max_cstate=0 cpuidle.off=1 cpufreq.off=1 intel_pstate=disable\""
+          line: "GRUB_CMDLINE_LINUX_DEFAULT=\"ipv6.disable=1 processor.max_cstate=0 intel_idle.max_cstate=0 cpuidle.off=1 cpufreq.off=1 intel_pstate=disable\""
         register: grub_conf_file_status
+
+      - name: Update grub
+        shell: "update-grub"
+        when: grub_conf_file_status.changed
+
+      - name: Install kernel headers
+        apt:
+          name: "linux-headers-{{ ansible_kernel }}"
+          state: present
+        when: "ansible_distribution == 'Debian'"
 
       - name: Create temporary build directory
         tempfile:
