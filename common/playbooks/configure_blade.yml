@@ -48,6 +48,13 @@
           state: present
 
       - name: Populate network configuration
+        lineinfile:
+          dest: /etc/network/interfaces
+          insertbefore: '^allow-hotplug enp3s0$'
+          line: 'auto enp3s0'
+          state: present
+
+      - name: Populate network configuration
         blockinfile:
           path: /etc/network/interfaces
           block: |
@@ -73,6 +80,11 @@
           regexp: '^(After=.*systemd-modules-load.service)$'
           replace: '\1 openvswitch-switch.service'
         when: "ansible_distribution == 'Debian'"
+        register: openvswitch_switch_service_file_status
+
+      - name: Reload daemon configuration
+        shell: "systemctl daemon-reload"
+        when: "ansible_distribution == 'Debian' and openvswitch_switch_service_file_status is defined and openvswitch_switch_service_file_status.changed"
 
       - name: Restart networking service
         service:
