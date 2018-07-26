@@ -1,0 +1,34 @@
+---
+  - hosts: openstack
+    gather_facts: no
+    become: true
+    tasks:
+      - name: Install fail2ban package
+        apt:
+          name: fail2ban
+          state: present
+
+      - name: Populate fail2ban configuration
+        ini_file:
+          path: "{{ item.path }}"
+          section: "{{ item.section }}"
+          option: "{{ item.option }}"
+          value: "{{ item.value }}"
+        with_items:
+          - { path: "/etc/fail2ban/jail.local", section: "DEFAULT", option: "ignoreip", value: "127.0.0.1/8 {{ fail2ban_ignoreip }}" }
+          - { path: "/etc/fail2ban/jail.local", section: "DEFAULT", option: "bantime", value: "3600" }
+          - { path: "/etc/fail2ban/jail.local", section: "DEFAULT", option: "findtime", value: "300" }
+          - { path: "/etc/fail2ban/jail.local", section: "DEFAULT", option: "maxretry", value: "5" }
+          - { path: "/etc/fail2ban/jail.local", section: "DEFAULT", option: "maxretry", value: "5" }
+          - { path: "/etc/fail2ban/jail.local", section: "sshd", option: "enabled", value: "true" }
+          - { path: "/etc/fail2ban/jail.local", section: "sshd", option: "port", value: "ssh" }
+          - { path: "/etc/fail2ban/jail.local", section: "sshd", option: "filter", value: "sshd" }
+          - { path: "/etc/fail2ban/jail.local", section: "sshd", option: "banaction", value: "iptables-multiport" }
+
+      - name: Start and enable fail2ban service
+        service:
+          name: fail2ban
+          state: restarted
+          enabled: yes
+
+        
