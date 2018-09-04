@@ -128,8 +128,22 @@
       args:
         executable: /bin/bash
 
+    - name: Create user-data temporary directory
+      tempfile:
+        state: directory
+        suffix: os-user-data
+      register: os_user_data_dir
+      when: "os_server_status.stdout|int == 0"
+
+    - name: Populate and copy user-data.txt from template
+      template:
+        src: "{{ playbook_dir}}/roles/os-cloud-init/templates/user-data.txt.j2"
+        dest: "{{ os_user_data_dir.path }}/user-data.txt"
+        mode: 0644
+      when: "os_server_status.stdout|int == 0"
+
     - name: Create server in Nova (selfservice network)
-      shell: "source {{ os_client_project_script }} && openstack server create --image {{ os_image_name }} --flavor {{ os_flavor_name }} --security-group {{ os_security_group_name }} --nic net-id={{ os_selfservice_network_id.stdout }} --key-name {{ os_key_name }} {{ os_instance_name }}"
+      shell: "source {{ os_client_project_script }} && openstack server create --image {{ os_image_name }} --flavor {{ os_flavor_name }} --security-group {{ os_security_group_name }} --nic net-id={{ os_selfservice_network_id.stdout }} --key-name {{ os_key_name }} --user-data={{ os_user_data_dir.path }}/user-data.txt {{ os_instance_name }}"
       when: "os_server_status.stdout|int == 0 and os_network_type == 'selfservice'"
       args:
         executable: /bin/bash
