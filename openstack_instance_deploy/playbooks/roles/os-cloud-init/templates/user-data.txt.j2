@@ -1,0 +1,10 @@
+#cloud-config
+ssh_pwauth: True
+users:
+  - name: {{ os_instance_user_name }}
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    passwd: {{ os_instance_user_pass }}
+    lock_passwd: False
+runcmd:
+ - [ sh, -c, "test -e /usr/bin/python || (/usr/bin/apt-get install -y python)" ]
