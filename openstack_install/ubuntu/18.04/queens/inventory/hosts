@@ -1,35 +1,35 @@
 [openstack]
-host.example.com ansible_user=username os_management_ip=192.168.0.2
+wilson.rand.kiev.ua ansible_user=rand os_management_ip=192.168.88.230
 
 [openstack:vars]
-os_env_mysql_root_password=secret
-os_env_rabbitmq_openstack_password=secret
-os_keystone_mysql_password=secret
-os_keystone_admin_password=secret
+os_env_mysql_root_password=8tgBtarDtFSmULN6AX
+os_env_rabbitmq_openstack_password=xRZmIyJDWWCf4nMs2N
+os_keystone_mysql_password=zPUXRo3ujBxoZCTbRM
+os_keystone_admin_password=gSuEq5qafAiOAbOSoa
 os_keystone_demo_user=rand
-os_keystone_demo_password=secret
-os_glance_mysql_password=secret
-os_glance_password=secret
+os_keystone_demo_password=TcihBqEHmjGaQ6d3kR
+os_glance_mysql_password=GnvuxYEuin5S4URJYX
+os_glance_password=PaIijGe4caaAjbFguj
 # Possible values - lxd, kvm
 os_nova_hypervisor=kvm
-os_nova_mysql_password=secret
-os_nova_password=secret
-os_placement_password=secret
+os_nova_mysql_password=2hSQl46RIyG71w9XIg
+os_nova_password=tfUudb3Vf2EpHD6zov
+os_placement_password=dofpb4VbbaDhxEHWAK
 # Possible values - linuxbridge, openvswitch
-os_neutron_driver=linuxbridge
-os_neutron_mysql_password=secret
-os_neutron_password=secret
+os_neutron_driver=openvswitch
+os_neutron_mysql_password=9Lpcp0egS523jNfQAt
+os_neutron_password=JxLWQ52VYjtmhdu4fV
 # for example: br-ex for openvswitch, enp0s31f6 for linuxbridge
-os_neutron_provider_interface_name=enp0s31f6
+os_neutron_provider_interface_name=br-ex
 os_neutron_provider_network_name=public
-os_neutron_metadata_secret=secret
-os_cinder_mysql_password=secret
-os_cinder_password=secret
+os_neutron_metadata_secret=Ol0HQ8aRTS7W1tejDB
+os_cinder_mysql_password=gc43nF0KMt8rp3j5Jg
+os_cinder_password=5IJsmtcxAIHVQrCFmL
 os_cinder_volume_group=vg_h1
-os_heat_mysql_password=secret
-os_heat_password=secret
+os_heat_mysql_password=Los3q4aw6Vk0fiQKDn
+os_heat_password=5xujaBqChNeCggd3vi
 os_network_create=true
-os_network_provider_cidr="192.168.0.0/24"
-os_network_provider_gw="192.168.0.1"
+os_network_provider_cidr="192.168.88.0/23"
+os_network_provider_gw="192.168.88.1"
 os_network_provider_dns=["1.1.1.1", "8.8.8.8"]
-os_network_provider_pool={"pool1": {"start": "192.168.0.2", "end": "192.168.0.254"} }
+os_network_provider_pool={"pool1": {"start": "192.168.89.10", "end": "192.168.89.254"} }

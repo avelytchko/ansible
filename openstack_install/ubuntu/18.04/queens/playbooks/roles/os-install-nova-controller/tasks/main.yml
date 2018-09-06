@@ -97,6 +97,12 @@
     - nova-scheduler
     - nova-placement-api
 
+- name: Change nova placement listen address
+  replace:
+    path: /etc/apache2/sites-available/nova-placement-api.conf
+    regexp: '^Listen 8778$'
+    replace: 'Listen {{ os_management_ip }}:8778'
+
 - name: Populate nova.conf config file
   ini_file:
     path: /etc/nova/nova.conf
@@ -107,6 +113,8 @@
     - { section: "api_database", option: "connection", value: "mysql+pymysql://nova:{{ os_nova_mysql_password }}@controller/nova_api" }
     - { section: "database", option: "connection", value: "mysql+pymysql://nova:{{ os_nova_mysql_password }}@controller/nova" }
     - { section: "DEFAULT", option: "transport_url", value: "rabbit://openstack:{{ os_env_rabbitmq_openstack_password }}@controller" }
+    - { section: "DEFAULT", option: "metadata_listen", value: "{{ os_management_ip }}" }
+    - { section: "DEFAULT", option: "osapi_compute_listen", value: "{{ os_management_ip }}" }
     - { section: "api", option: "auth_strategy", value: "keystone" }
     - { section: "keystone_authtoken", option: "auth_uri", value: "http://controller:5000" }
     - { section: "keystone_authtoken", option: "auth_url", value: "http://controller:5000" }
@@ -123,6 +131,7 @@
     - { section: "vnc", option: "enabled", value: "true" }
     - { section: "vnc", option: "server_listen", value: "$my_ip" }
     - { section: "vnc", option: "server_proxyclient_address", value: "$my_ip" }
+    - { section: "vnc", option: "novncproxy_host", value: "{{ os_management_ip }}" }
     - { section: "glance", option: "api_servers", value: "http://controller:9292" }
     - { section: "oslo_concurrency", option: "lock_path", value: "/var/lib/nova/tmp" }
     - { section: "placement", option: "os_region_name", value: "RegionOne" }
@@ -175,11 +184,12 @@
 
   when: nova_conf_file_status.changed
 
-- name: Restart the Compute services
+- name: Restart the Compute services and Apache
   service:
     name: "{{ item }}"
     state: restarted
   with_items:
+    - apache2
     - nova-api
     - nova-consoleauth
     - nova-scheduler

@@ -72,6 +72,12 @@
     - cinder-api
     - cinder-scheduler
 
+- name: Change cinder listen address
+  replace:
+    path: /etc/apache2/conf-available/cinder-wsgi.conf
+    regexp: '^Listen 8776$'
+    replace: 'Listen {{ os_management_ip }}:8776'
+
 - name: Populate cinder config file
   ini_file:
     path: /etc/cinder/cinder.conf

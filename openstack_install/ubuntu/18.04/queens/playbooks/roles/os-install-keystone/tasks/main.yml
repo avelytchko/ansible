@@ -26,6 +26,12 @@
     - apache2
     - libapache2-mod-wsgi
 
+- name: Change keystone listen address
+  replace:
+    path: /etc/apache2/sites-available/keystone.conf
+    regexp: '^Listen 5000$'
+    replace: 'Listen {{ os_management_ip }}:5000'
+
 - name: Populate keystone.conf config file
   ini_file:
     path: /etc/keystone/keystone.conf

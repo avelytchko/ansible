@@ -124,6 +124,9 @@
   with_items:
     - { section: "database", option: "connection", value: "mysql+pymysql://heat:{{ os_heat_mysql_password }}@controller/heat" }
     - { section: "DEFAULT", option: "transport_url", value: "rabbit://openstack:{{ os_env_rabbitmq_openstack_password }}@controller" }
+    - { section: "heat_api", option: "bind_host", value: "{{ os_management_ip }}" }
+    - { section: "heat_api_cfn", option: "bind_host", value: "{{ os_management_ip }}" }
+    - { section: "heat_api_cloudwatch", option: "bind_host", value: "{{ os_management_ip }}" }
     - { section: "keystone_authtoken", option: "auth_uri", value: "http://controller:5000" }
     - { section: "keystone_authtoken", option: "auth_url", value: "http://controller:5000" }
     - { section: "keystone_authtoken", option: "memcached_servers", value: "controller:11211" }

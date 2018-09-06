@@ -69,6 +69,7 @@
     option: "{{ item.option }}"
     value: "{{ item.value }}"
   with_items:
+    - { path: "/etc/glance/glance-api.conf", section: "DEFAULT", option: "bind_host", value: "{{ os_management_ip }}" }
     - { path: "/etc/glance/glance-api.conf", section: "database", option: "connection", value: "mysql+pymysql://glance:{{ os_glance_mysql_password }}@controller/glance" }
     - { path: "/etc/glance/glance-api.conf", section: "keystone_authtoken", option: "auth_uri", value: "http://controller:5000" }
     - { path: "/etc/glance/glance-api.conf", section: "keystone_authtoken", option: "auth_url", value: "http://controller:5000" }
@@ -83,6 +84,7 @@
     - { path: "/etc/glance/glance-api.conf", section: "glance_store", option: "stores", value: "file,http" }
     - { path: "/etc/glance/glance-api.conf", section: "glance_store", option: "default_store", value: "file" }
     - { path: "/etc/glance/glance-api.conf", section: "glance_store", option: "filesystem_store_datadir", value: "/var/lib/glance/images/" }
+    - { path: "/etc/glance/glance-registry.conf", section: "DEFAULT", option: "bind_host", value: "{{ os_management_ip }}" }
     - { path: "/etc/glance/glance-registry.conf", section: "database", option: "connection", value: "mysql+pymysql://glance:{{ os_glance_mysql_password }}@controller/glance" }
     - { path: "/etc/glance/glance-registry.conf", section: "database", option: "connection", value: "mysql+pymysql://glance:{{ os_glance_mysql_password }}@controller/glance" }
     - { path: "/etc/glance/glance-registry.conf", section: "keystone_authtoken", option: "auth_uri", value: "http://controller:5000" }
