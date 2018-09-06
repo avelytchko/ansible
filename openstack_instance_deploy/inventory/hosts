@@ -26,3 +26,4 @@ os_security_group_rules={"rule1": {"proto": "tcp", "port": "2106"}, "rule2": {"p
 os_volume_size=10
 os_instance_user_name=rand
 os_instance_user_pass=$1$cmNLUZir$poRU.dcGqWNpsCbc1yXgp/
+os_instance_cloud_init_runcmd="test -e /usr/bin/python || (/usr/bin/apt-get install -y python)"
