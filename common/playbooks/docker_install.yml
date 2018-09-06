@@ -43,7 +43,18 @@
           src: "daemon.json.j2"
           dest: /etc/docker/daemon.json
 
-      - name: Start docker servuce
+      - name: Start docker service
         service:
           name: docker
           state: started
+
+      - name: Get current user
+        set_fact:
+          local_user: "{{ lookup('env','USER') }}"
+
+      - name: Add local user to docker group
+        user:
+          name: "{{ local_user }}"
+          groups: docker
+          append: yes
+        when: "local_user != 'root'"
