@@ -1,0 +1,50 @@
+---
+  - name: Get droplet info
+    digital_ocean:
+      api_token: "{{ do_api_token }}"
+      name: "{{ do_droplet_name }}"
+      unique_name: yes
+    register: do_server_id_st
+
+  - block:
+
+    - name: Create block storage
+      digital_ocean_block_storage:
+        block_size: "{{ do_volume_size }}"
+        command: create
+        oauth_token: "{{ do_api_token }}"
+        region: "{{ do_region_id }}"
+        state: present
+        volume_name: "{{ do_volume_name }}-{{ do_region_id }}"
+
+    - name: Attach block storage to droplet
+      digital_ocean_block_storage:
+        command: attach
+        droplet_id: "{{ do_server_id_st.droplet.id }}"
+        oauth_token: "{{ do_api_token }}"
+        region: "{{ do_region_id }}"
+        state: present
+        volume_name: "{{ do_volume_name }}-{{ do_region_id }}"
+
+    when: do_volume_remove|default(False)|bool == False
+
+  - block:
+
+    - name: Detach block storage from droplet
+      digital_ocean_block_storage:
+        command: attach
+        droplet_id: "{{ do_server_id_st.droplet.id }}"
+        oauth_token: "{{ do_api_token }}"
+        region: "{{ do_region_id }}"
+        state: absent
+        volume_name: "{{ do_volume_name }}-{{ do_region_id }}"
+
+    - name: Remove block storage
+      digital_ocean_block_storage:
+        command: create
+        oauth_token: "{{ do_api_token }}"
+        region: "{{ do_region_id }}"
+        state: absent
+        volume_name: "{{ do_volume_name }}-{{ do_region_id }}"
+
+    when: do_volume_remove|default(False)|bool == True

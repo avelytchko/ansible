@@ -1,0 +1,5 @@
+---
+  - hosts: digitalocean
+    gather_facts: no
+    roles:
+      - { role: do-volume, do_volume_remove: True }

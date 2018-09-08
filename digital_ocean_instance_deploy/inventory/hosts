@@ -11,3 +11,7 @@ do_fip_delete=true
 do_region_id=fra1
 do_size_id=s-1vcpu-1gb
 do_user_data="test -e /usr/bin/python || (/usr/bin/apt-get install -y python)"
+# volume size in Gigabytes
+do_volume_size=5
+# do_volume_name and do_region_id  will be used as name
+do_volume_name=volume01
