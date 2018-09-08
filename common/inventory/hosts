@@ -1,14 +1,16 @@
 [openstack]
-wilson.rand.kiev.ua
+#wilson.rand.kiev.ua
+claire.rand.kiev.ua
 
 [instance]
 portman.rand.kiev.ua ansible_port=8923
+#claire.rand.kiev.ua
 
 [openstack:vars]
 mgmt_eth_name=enp3s0
 ovs_bridge_name=br-ex
 ovs_port_name=enp0s31f6
-fail2ban_ignoreip="188.239.22.127 31.172.140.133"
+fail2ban_ignoreip="188.239.22.127 31.172.140.133 104.224.146.128"
 
 [instance:vars]
 docker_dm_device=vdc
