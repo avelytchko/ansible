@@ -1,0 +1,6 @@
+---
+  - hosts: digitalocean
+    gather_facts: yes
+    roles:
+      - { role: do-server }
+      - { role: do-volume }
