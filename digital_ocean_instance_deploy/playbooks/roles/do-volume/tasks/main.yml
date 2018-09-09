@@ -31,7 +31,7 @@
     - name: Attach block storage to droplet
       digital_ocean_block_storage:
         command: attach
-        droplet_id: "{{ do_server_id_st.droplet.id }}"
+        droplet_id: "{{ do_droplet_id }}"
         oauth_token: "{{ do_api_token }}"
         region: "{{ do_region_id }}"
         state: present
@@ -44,7 +44,7 @@
     - name: Detach block storage from droplet
       digital_ocean_block_storage:
         command: attach
-        droplet_id: "{{ do_server_id_st.droplet.id }}"
+        droplet_id: "{{ do_droplet_id }}"
         oauth_token: "{{ do_api_token }}"
         region: "{{ do_region_id }}"
         state: absent
