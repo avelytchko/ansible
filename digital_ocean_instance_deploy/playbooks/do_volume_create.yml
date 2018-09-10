@@ -2,4 +2,4 @@
   - hosts: digitalocean
     gather_facts: no
     roles:
-      - { role: do-volume }
+      - { role: do-volume, when: "do_volume_name is defined and do_volume_size is defined" }

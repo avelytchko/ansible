@@ -26,7 +26,7 @@
         oauth_token: "{{ do_api_token }}"
         region: "{{ do_region_id }}"
         state: present
-        volume_name: "{{ do_volume_name }}-{{ do_region_id }}"
+        volume_name: "{{ do_droplet_name }}-{{ do_volume_name }}-{{ do_region_id }}"
 
     - name: Attach block storage to droplet
       digital_ocean_block_storage:
@@ -35,7 +35,7 @@
         oauth_token: "{{ do_api_token }}"
         region: "{{ do_region_id }}"
         state: present
-        volume_name: "{{ do_volume_name }}-{{ do_region_id }}"
+        volume_name: "{{ do_droplet_name }}-{{ do_volume_name }}-{{ do_region_id }"
 
     when: do_volume_remove|default(False)|bool == False
 
@@ -48,7 +48,7 @@
         oauth_token: "{{ do_api_token }}"
         region: "{{ do_region_id }}"
         state: absent
-        volume_name: "{{ do_volume_name }}-{{ do_region_id }}"
+        volume_name: "{{ do_droplet_name }}-{{ do_volume_name }}-{{ do_region_id }"
       when: "do_droplet_id is defined"
 
     - name: Remove block storage
@@ -57,6 +57,6 @@
         oauth_token: "{{ do_api_token }}"
         region: "{{ do_region_id }}"
         state: absent
-        volume_name: "{{ do_volume_name }}-{{ do_region_id }}"
+        volume_name: "{{ do_droplet_name }}-{{ do_volume_name }}-{{ do_region_id }"
 
     when: do_volume_remove|default(False)|bool == True
