@@ -13,17 +13,6 @@
       state: present
     become: yes
 
-  - name: Get Floating IPs info
-    digital_ocean_floating_ip_facts:
-      api_token: "{{ do_api_token }}"
-    register: do_fips_st
-
-  - set_fact:
-      do_floating_ip: "{{ item.ip }}"
-    with_items:
-      - "{{ do_fips_st.floating_ips }}"
-    when: "item.droplet and item.droplet.name == do_droplet_actual_name"
-
   - block:
 
     - name: Create ssh key for droplet
@@ -51,51 +40,9 @@
         wait_timeout: 300
       register: do_server_create_st
 
-# TODO: change FIP detection before creating
-    - name: Create and assign floating ip for new droplet
-      digital_ocean_floating_ip:
-        oauth_token: "{{ do_api_token }}"
-        state: present
-        droplet_id: "{{ do_server_create_st.droplet.id }}"
-      when: do_server_create_st.changed
-      register: do_fip_create_assign_st
-
-    - name: Show Floating IP assigned to droplet
-      debug:
-        msg: "Floating IP: {{ do_fip_create_assign_st.data.floating_ip.ip }}"
-      when: do_server_create_st.changed
-
-    - name: Get droplet info
-      digital_ocean:
-        api_token: "{{ do_api_token }}"
-        name: "{{ do_droplet_actual_name }}"
-        unique_name: yes
-      when: not do_server_create_st.changed
-      register: do_server_id_st
-
-    - name: Create and assign floating ip for existing droplet
-      digital_ocean_floating_ip:
-        oauth_token: "{{ do_api_token }}"
-        state: present
-        droplet_id: "{{ do_server_id_st.droplet.id }}"
-      when: "do_server_id_st.droplet is defined and do_floating_ip is undefined"
-      register: do_fip_create_st
-
-    - name: Show Floating IP assigned to droplet
-      debug:
-        msg: "Floating IP: {{ do_fip_create_st.data.floating_ip.ip }}"
-      when: do_fip_create_st.changed
-
     when: do_server_remove|default(False)|bool == False
 
   - block:
-
-    - name: Remove floating ip
-      digital_ocean_floating_ip:
-        oauth_token: "{{ do_api_token }}"
-        state: absent
-        ip: "{{ do_floating_ip }}"
-      when: do_floating_ip is defined and do_fip_delete|default(False)|bool == True
 
     - name: Remove droplet
       digital_ocean:
