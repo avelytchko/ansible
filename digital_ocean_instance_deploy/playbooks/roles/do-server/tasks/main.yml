@@ -22,7 +22,7 @@
       do_floating_ip: "{{ item.ip }}"
     with_items:
       - "{{ do_fips_st.floating_ips }}"
-    when: "item.droplet and item.droplet.name == do_droplet_name"
+    when: "item.droplet and item.droplet.name == do_droplet_actual_name"
 
   - block:
 
@@ -39,7 +39,7 @@
         api_token: "{{ do_api_token }}"
         command: droplet
         image_id: "{{ do_image_id }}"
-        name: "{{ do_droplet_name }}"
+        name: "{{ do_droplet_actual_name }}"
         private_networking: "{{ do_private_networking|bool }}"
         region_id: "{{ do_region_id }}"
         size_id: "{{ do_size_id }}"
@@ -51,6 +51,7 @@
         wait_timeout: 300
       register: do_server_create_st
 
+# TODO: change FIP detection before creating
     - name: Create and assign floating ip for new droplet
       digital_ocean_floating_ip:
         oauth_token: "{{ do_api_token }}"
@@ -67,7 +68,7 @@
     - name: Get droplet info
       digital_ocean:
         api_token: "{{ do_api_token }}"
-        name: "{{ do_droplet_name }}"
+        name: "{{ do_droplet_actual_name }}"
         unique_name: yes
       when: not do_server_create_st.changed
       register: do_server_id_st
@@ -100,7 +101,7 @@
       digital_ocean:
         api_token: "{{ do_api_token }}"
         command: droplet
-        name: "{{ do_droplet_name }}"
+        name: "{{ do_droplet_actual_name }}"
         unique_name: true
         state: absent
         wait_timeout: 120

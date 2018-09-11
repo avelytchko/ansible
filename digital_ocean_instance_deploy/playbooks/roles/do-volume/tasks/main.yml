@@ -15,7 +15,7 @@
       do_droplet_id: "{{ item.id }}"
     with_items:
       - "{{ do_droplet_info.json.droplets }}"
-    when: "item.name == do_droplet_name"
+    when: "item.name == do_droplet_actual_name"
 
   - block:
 
