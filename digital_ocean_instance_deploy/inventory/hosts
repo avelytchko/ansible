@@ -4,14 +4,22 @@ localhost ansible_connection=local
 [digitalocean:vars]
 do_api_token=4d22a74b6a4bcbddcaca56706b4075d11b2134b7d3102d372ab147da0d1d5031
 do_image_id=ubuntu-16-04-x64
-do_droplet_name=ubuntu-s-1vcpu-1gb-fra1-01
+# this name will be using also as subdomain for do_domain_name
+# droplet name will be combined together with do_domain_name
+do_droplet_name=claire
 do_private_networking=true
 # delete Floating IP after droplet deletion
-do_fip_delete=true
+do_fip_delete=false
 do_region_id=fra1
 do_size_id=s-1vcpu-1gb
 do_user_data="test -e /usr/bin/python || (/usr/bin/apt-get install -y python)"
 # volume size in Gigabytes
+# you can delete the line if you don't want to use volumes
 do_volume_size=5
-# do_volume_name and do_region_id  will be used as name
+# do_volume_name, do_droplet_name and do_region_id will be used as volume name
+# you can delete the line if you don't want to use volumes
 do_volume_name=volume01
+# delete the line below if you don't want to use domains
+do_domain_name=rand.net.ua
+# use with caution, it will delete domain with all subdomains if true
+do_domain_delete=false

@@ -1,0 +1,5 @@
+---
+  - hosts: digitalocean
+    gather_facts: no
+    roles:
+      - { role: do-domain, do_domain_remove: True, when: "do_domain_name is defined" }

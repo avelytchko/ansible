@@ -4,3 +4,4 @@
     roles:
       - { role: do-volume, do_volume_remove: True, when: "do_volume_name is defined and do_volume_size is defined" }
       - { role: do-server, do_server_remove: True }
+      - { role: do-domain, do_domain_remove: True, when: "do_domain_name is defined" }

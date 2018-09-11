@@ -1,0 +1,118 @@
+---
+  - name: Get domains info
+    uri:
+      body_format: json
+      url: "https://api.digitalocean.com/v2/domains"
+      method: GET
+      headers:
+        Content-Type: 'application/json'
+        Authorization: "Bearer {{ do_api_token }}"
+      return_content: yes
+    register: do_domains_info
+
+  - name: Check if domain created
+    set_fact:
+      do_domain_created: true
+    with_items:
+      - "{{ do_domains_info.json.domains }}"
+    when: "item.name == do_domain_name"
+
+  - block:
+
+    - name: Create domain
+      uri:
+        body_format: json
+        url: "https://api.digitalocean.com/v2/domains"
+        method: POST
+        status_code: 200,201
+        headers:
+          Content-Type: 'application/json'
+          Authorization: "Bearer {{ do_api_token }}"
+        body:
+          name: "{{ do_domain_name }}"
+        return_content: yes
+      register: do_domain_create_info
+      when: "do_domain_created is not defined"
+
+    when: do_domain_remove|default(False)|bool == False
+
+  - name: Get domain records info
+    uri:
+      body_format: json
+      url: "https://api.digitalocean.com/v2/domains/{{ do_domain_name }}/records"
+      method: GET
+      headers:
+        Content-Type: 'application/json'
+        Authorization: "Bearer {{ do_api_token }}"
+      return_content: yes
+    register: do_domain_records_info
+    when: "(do_domain_create_info is defined and do_domain_create_info) or do_domain_created is defined"
+
+  - set_fact:
+      do_domain_record_created: true
+      do_domain_record_id: "{{ item.id }}"
+    with_items:
+      - "{{ do_domain_records_info.json.domain_records }}"
+    when: "do_domain_records_info.json is defined and item.name and item.name == do_droplet_name"
+
+  - name: Get Floating IP info
+    digital_ocean_floating_ip_facts:
+      api_token: "{{ do_api_token }}"
+    register: do_fip_info
+
+  - set_fact:
+      do_floating_ip: "{{ item.ip }}"
+    with_items:
+      - "{{ do_fip_info.floating_ips }}"
+    when: "item.droplet and item.droplet.name == do_droplet_actual_name"
+
+  - block:
+
+    - name: Create domain record
+      uri:
+        body_format: json
+        url: "https://api.digitalocean.com/v2/domains/{{ do_domain_name }}/records"
+        method: POST
+        status_code: 200,201
+        headers:
+          Content-Type: 'application/json'
+          Authorization: "Bearer {{ do_api_token }}"
+        body:
+          type: "A"
+          name: "{{ do_droplet_name }}"
+          data: "{{ do_floating_ip }}"
+        return_content: yes
+      register: do_domain_record_create
+      when: "(do_domain_created is defined or (do_domain_create_info is defined and do_domain_create_info)) and do_floating_ip is defined and do_domain_record_created is not defined"
+
+    when: do_domain_remove|default(False)|bool == False
+
+  - block:
+
+    - name: Remove domain record
+      uri:
+        body_format: json
+        url: "https://api.digitalocean.com/v2/domains/{{ do_domain_name }}/records/{{ do_domain_record_id }}"
+        method: DELETE
+        status_code: 200,201,204
+        headers:
+          Content-Type: 'application/json'
+          Authorization: "Bearer {{ do_api_token }}"
+        return_content: yes
+      register: do_domain_record_delete
+      when: "do_domain_created is defined and do_domain_record_created is defined"
+
+    - name: Remove domain
+      uri:
+        body_format: json
+        url: "https://api.digitalocean.com/v2/domains/{{ do_domain_name }}"
+        method: DELETE
+        status_code: 200,201,204
+        headers:
+          Content-Type: 'application/json'
+          Authorization: "Bearer {{ do_api_token }}"
+        return_content: yes
+      register: do_domain_delete_info
+      when: "do_domain_created is defined and do_domain_delete|default(False)|bool == True"
+
+    when: do_domain_remove|default(False)|bool == True

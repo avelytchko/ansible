@@ -1,5 +1,5 @@
 ---
   - hosts: digitalocean
-    gather_facts: yes
+    gather_facts: no
     roles:
-      - { role: do-server }
+      - { role: do-domain, when: "do_domain_name is defined" }
