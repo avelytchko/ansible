@@ -45,6 +45,7 @@
         Content-Type: 'application/json'
         Authorization: "Bearer {{ do_api_token }}"
       return_content: yes
+      status_code: 200,201,404
     register: do_domain_records_info
     when: "(do_domain_create_info is defined and do_domain_create_info) or do_domain_created is defined"
 
@@ -53,7 +54,7 @@
       do_domain_record_id: "{{ item.id }}"
     with_items:
       - "{{ do_domain_records_info.json.domain_records }}"
-    when: "do_domain_records_info.json is defined and item.name and item.name == do_droplet_name"
+    when: "do_domain_records_info.json.domain_records is defined and item.name and item.name == do_droplet_name"
 
   - name: Get Floating IP info
     digital_ocean_floating_ip_facts:
