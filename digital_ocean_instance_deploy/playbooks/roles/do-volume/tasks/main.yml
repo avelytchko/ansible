@@ -29,28 +29,18 @@
         volume_name: "{{ do_droplet_name }}-{{ do_volume_name }}-{{ do_region_id }}"
       register: do_volume_create_info
 
-    - name: Check block storage creating status
+    - name: Wait for block storage creating
       uri:
         body_format: json
-        url: "https://api.digitalocean.com/v2/volumes?name={{ do_droplet_name }}-{{ do_volume_name }}-{{ do_region_id }}&region={{ do_region_id }}"
+        url: "https://api.digitalocean.com/v2/volumes/{{ do_volume_create_info.id }}"
         method: GET
         headers:
           Content-Type: 'application/json'
           Authorization: "Bearer {{ do_api_token }}"
         return_content: yes
-      async: 60
-      poll: 5
-      register: do_volume_info
-      when: do_volume_create_info.changed
-
-    - name: Wait for block storage creating
-      async_status:
-        jid: "{{ do_volume_info.ansible_job_id }}"
-      register: job_result
-      until: "item.name == '{{ do_droplet_name }}-{{ do_volume_name }}-{{ do_region_id }}'"
+      until: "do_volume_info.json.volume.name == '{{ do_droplet_name }}-{{ do_volume_name }}-{{ do_region_id }}'"
       retries: 30
-      with_items:
-        - "{{ do_volume_info.json.volumes }}"
+      register: do_volume_info
       when: do_volume_create_info.changed
 
     - name: Attach block storage to droplet
