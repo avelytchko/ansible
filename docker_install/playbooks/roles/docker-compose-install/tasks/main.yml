@@ -1,0 +1,95 @@
+---
+  - name: Install docker compose
+    apt:
+      name: "docker-compose"
+      state: present
+
+  - name: Create configuration directory
+    file:
+      dest: /etc/docker-compose
+      state: directory
+      mode: 0700
+
+  - name: Write docker-compose.yml
+    template:
+      dest: /etc/docker-compose/docker-compose.yml
+      src: templates/docker-compose.yml
+      mode: 0600
+    register: compose_file
+
+  - name: Validate configuration
+    command: docker-compose config -q
+    args:
+      chdir: /etc/docker-compose
+    when: compose_file.changed and docker_compose_validate
+
+  - name: Install docker-compose.service
+    copy:
+      dest: /etc/systemd/system/docker-compose.service
+      content: |
+        [Unit]
+        Description=Docker Compose container starter
+        After=docker.service network-online.target
+        Requires=docker.service network-online.target
+
+        [Service]
+        WorkingDirectory=/etc/docker-compose
+        Type=oneshot
+        RemainAfterExit=yes
+
+        ExecStartPre=-/usr/bin/docker-compose pull --quiet --ignore-pull-failures
+        ExecStart=/usr/bin/docker-compose up -d --remove-orphans
+
+        ExecStop=/usr/bin/docker-compose {{ docker_compose_stop_action }}
+
+        ExecReload=/usr/bin/docker-compose pull --quiet --ignore-pull-failures
+        ExecReload=/usr/bin/docker-compose up -d --remove-orphans
+
+        [Install]
+        WantedBy=docker.service
+
+  - name: Enable docker-compose service
+    systemd:
+      name: docker-compose.service
+      daemon_reload: yes
+      enabled: yes
+
+  - name: Install docker-compose-reload.service
+    copy:
+      dest: /etc/systemd/system/docker-compose-reload.service
+      content: |
+        [Unit]
+        Description=Refresh images and update containers
+
+        [Service]
+        Type=oneshot
+        
+        ExecStart=/bin/systemctl reload-or-restart docker-compose.service
+
+  - name: Install docker-compose-reload.timer
+    copy:
+      dest: /etc/systemd/system/docker-compose-reload.timer
+      content: |
+        [Unit]
+        Description=Refresh images and update containers
+        Requires=docker-compose.service
+        After=docker-compose.service
+
+        [Timer]
+        OnCalendar=*:0/{{ docker_compose_reload_minutes }}
+        RandomizedDelaySec={{ docker_compose_reload_max_delay }}
+
+        [Install]
+        WantedBy=timers.target
+
+  - name: Enable docker-compose-reload.timer
+    systemd:
+      name: docker-compose-reload.timer
+      daemon_reload: yes
+      enabled: yes
+
+  - name: Restart docker-compose-reload.timer
+    systemd:
+      name: docker-compose-reload.timer
+      daemon_reload: yes
+      state: restarted

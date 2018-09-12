@@ -1,0 +1,5 @@
+[openstack]
+wilson.rand.kiev.ua
+
+#[instance]
+#portman.rand.kiev.ua ansible_port=8923
