@@ -21,8 +21,8 @@
 
 - name: Populate /etc/chrony.conf 
   lineinfile:
-    path: /etc/chrony.conf
-    line: "{{ item }} iburst"
+    path: /etc/chrony/chrony.conf
+    line: "pool {{ item }} iburst"
     create: yes
   with_items:
     - "0.ua.pool.ntp.org"
