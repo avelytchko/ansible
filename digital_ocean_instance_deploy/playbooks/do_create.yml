@@ -3,6 +3,7 @@
     gather_facts: yes
     roles:
       - { role: do-server }
+      - { role: do-firewall, when: "do_firewall is defined"}
       - { role: do-volume, when: "do_volume_name is defined and do_volume_size is defined" }
       - { role: do-fip }
       - { role: do-domain, when: "do_domain_name is defined" }
