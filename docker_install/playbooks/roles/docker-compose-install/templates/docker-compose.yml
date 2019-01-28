@@ -1,3 +1,0 @@
-# {{ ansible_managed }}
-
-{{ docker_compose_config | to_nice_yaml }}

@@ -13,7 +13,7 @@
   - name: Write docker-compose.yml
     template:
       dest: /etc/docker-compose/docker-compose.yml
-      src: templates/docker-compose.yml
+      src: templates/docker-compose.yml.j2
       mode: 0600
     register: compose_file
 
