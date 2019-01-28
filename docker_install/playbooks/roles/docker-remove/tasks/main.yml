@@ -1,0 +1,36 @@
+  - name: Stop docker service
+    service:
+      name: docker
+      state: stopped
+
+  - name: Stop docker-compose-reload.timer
+    systemd:
+      name: docker-compose-reload.timer
+      daemon_reload: yes
+      state: stopped
+
+  - name: Stop docker-compose service
+    systemd:
+      name: docker-compose.service
+      daemon_reload: yes
+      state: stopped
+
+  - name: Remove docker packages
+    apt:
+      name: "{{ item }}"
+      state: present
+    with_items:
+      - docker-ce
+      - docker-compose
+
+  - name: Remove docker files
+    file:
+      path: "{{ item }}"
+      state: absent
+    with_items:
+      - /etc/docker-compose
+      - /etc/docker-compose/docker-compose.yml
+      - /etc/systemd/system/docker-compose.service
+      - /etc/systemd/system/docker-compose-reload.timer
+      - /etc/docker/daemon.json
+
