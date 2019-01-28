@@ -1,0 +1,35 @@
+  - name: Create user jenkins
+    user:
+      name: jenkins
+      state: present
+
+  - name: Write docker-compose.yml
+    template:
+      dest: /etc/docker-compose/docker-compose.yml
+      src: templates/docker-compose.yml.j2
+      mode: 0600
+    register: compose_file
+
+  - name: Validate configuration
+    command: docker-compose config -q
+    args:
+      chdir: /etc/docker-compose
+    when: compose_file.changed and docker_compose_validate
+
+  - name: Create user jenkins
+    user:
+      name: jenkins
+      state: present
+
+  - name: Restart docker-compose service
+    systemd:
+      name: docker-compose.service
+      daemon_reload: yes
+      state: restarted
+
+  - name: Restart docker-compose-reload.timer
+    systemd:
+      name: docker-compose-reload.timer
+      daemon_reload: yes
+      state: restarted
+
