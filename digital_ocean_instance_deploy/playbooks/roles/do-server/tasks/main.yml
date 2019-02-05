@@ -23,6 +23,10 @@
         ssh_pub_key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_rsa.pub') }}"
       register: do_ssh_key_create_st
 
+    - set_fact:
+        do_user_data_input: "{{ lookup('template', 'user_data.j2') | trim }}"
+      when: do_user_data
+
     - name: Create droplet
       digital_ocean:
         api_token: "{{ do_api_token }}"
@@ -35,7 +39,7 @@
         ssh_key_ids: "{{ do_ssh_key_create_st.data.ssh_key.id }}"
         state: present
         unique_name: true
-        user_data: "{{ do_user_data }}"
+        user_data: "{{ do_user_data_input|default('') }}"
         virtio: true
         wait_timeout: 300
       register: do_server_create_st

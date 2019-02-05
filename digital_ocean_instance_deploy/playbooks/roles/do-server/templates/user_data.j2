@@ -1,0 +1,5 @@
+#cloud-config
+
+runcmd:  
+  - apt-get install -y python-minimal
+  - curl -sSL https://agent.digitalocean.com/install.sh | sh
