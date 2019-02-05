@@ -1,14 +1,44 @@
+  - set_fact:
+      jenkins_install_state: "absent"
+    when: jenkins_remove|default(False)
+
   - name: Create user jenkins
     user:
       name: jenkins
-      state: present
+      state: "{{ jenkins_install_state|default('present') }}"
 
-  - name: Write docker-compose.yml
-    template:
-      dest: /etc/docker-compose/docker-compose.yml
-      src: templates/docker-compose.yml.j2
-      mode: 0600
+  - name: Populate docker-compose.yml with jenkins service
+    blockinfile:
+      path: "{{ docker_compose_file_path }}"
+      marker_begin: "begin jenkins services block"
+      marker_end: "end jenkins services block"
+      insertafter: '^services:'
+      block: |2
+          jenkins:
+            image: jenkins/jenkins:lts
+            container_name: jenkins
+            user: jenkins
+            volumes:
+              - jenkins_home:/var/jenkins_home
+              - jenkins_data:/jenkins_config
+              - /var/run/docker.sock:/var/run/docker.sock
+            ports:
+              - "127.0.0.1:80:8080"
+      state: "{{ jenkins_install_state|default('present') }}"
     register: compose_file
+
+  - name: Populate docker-compose.yml with jenkins volumes
+    blockinfile:
+      path: "{{ docker_compose_file_path }}"
+      marker_begin: "begin jenkins volumes block"
+      marker_end: "end jenkins volumes block"
+      insertafter: '^volumes:'
+      block: |2
+          jenkins_data:
+            driver: local
+          jenkins_home:
+            driver: local
+      state: "{{ jenkins_install_state|default('present') }}"
 
   - name: Validate configuration
     command: docker-compose config -q
@@ -19,7 +49,7 @@
   - name: Create user jenkins
     user:
       name: jenkins
-      state: present
+      state: "{{ jenkins_install_state|default('present') }}"
 
   - name: Restart docker-compose service
     systemd:
