@@ -10,7 +10,7 @@
         apt:
           name: "{{ item }}"
           state: present
-        with_items:
+        loop:
           - aptitude
           - git
           - gcc
@@ -67,7 +67,7 @@
             iface {{ ovs_bridge_name }} inet static
               bridge_ports {{ ovs_port_name }}
               bridge_stp off
-              address 192.168.88.230
+              address {{ ovs_bridge_ip }}
               netmask 255.255.254.0
               gateway 192.168.88.1
               dns-nameservers 192.168.88.1 1.1.1.1 8.8.8.8
