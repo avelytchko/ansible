@@ -23,7 +23,7 @@
               - jenkins_data:/jenkins_config
               - /var/run/docker.sock:/var/run/docker.sock
             ports:
-              - "127.0.0.1:8080:8080"
+              - "172.17.0.1:8080:8080"
       state: "{{ jenkins_install_state|default('present') }}"
     register: compose_file
 
@@ -45,11 +45,6 @@
     args:
       chdir: /etc/docker-compose
     when: compose_file.changed and docker_compose_validate
-
-  - name: Create user jenkins
-    user:
-      name: jenkins
-      state: "{{ jenkins_install_state|default('present') }}"
 
   - name: Restart docker-compose service
     systemd:
