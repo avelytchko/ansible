@@ -1,0 +1,51 @@
+---
+- name: Check if volume exists in Cinder
+  shell: "source {{ os_client_project_script }} && openstack volume list -f value -c Name -c Status | grep -w '^{{ os_instance_name }}-vol' | wc -l"
+  register: os_volume_status
+  args:
+    executable: /bin/bash
+
+- name: Check volume status in Cinder
+  shell: "source {{ os_client_project_script }} && openstack volume list -f value -c Name -c Status | grep -w '^{{ os_instance_name }}-vol' | awk '{ print $2 }'"
+  register: os_volume_attach_status
+  when: "os_volume_status.stdout|int != 0"
+  args:
+    executable: /bin/bash
+
+- block:
+
+  - name: Create cinder volume
+    shell: "source {{ os_client_project_script }} && openstack volume create --size {{ os_volume_size }} {{ os_instance_name }}-vol"
+    when: "os_volume_status.stdout|int == 0"
+    args:
+      executable: /bin/bash
+
+  - name: Wait for volume to create
+    shell: "source {{ os_client_project_script }} && openstack volume list -f value -c Name -c Status | grep -w '^{{ os_instance_name }}-vol' | awk '{ print $2 }'"
+    register: os_volume_creating_status
+    until: "'available' in os_volume_creating_status.stdout"
+    retries: 15
+    delay: 10
+    when: "os_volume_status.stdout|int == 0"
+    args:
+      executable: /bin/bash
+
+  - name: Attach cinder volume to instance
+    shell: "source {{ os_client_project_script }} && openstack server add volume {{ os_instance_name }} {{ os_instance_name }}-vol"
+    when: "os_volume_status.stdout|int == 0 or os_volume_attach_status.stdout == 'available'"
+    args:
+      executable: /bin/bash
+
+  when: "os_volume_remove|default(False)|bool == False"
+
+- name: Deatch volume from instance
+  shell: "source {{ os_client_project_script }} && openstack server remove volume {{ os_instance_name }} {{ os_instance_name }}-vol"
+  when: "os_volume_status.stdout|int != 0 and os_volume_remove|default(False)|bool == True and os_volume_attach_status.stdout == 'in-use'"
+  args:
+    executable: /bin/bash
+
+- name: Delete volume from Cinder
+  shell: "source {{ os_client_project_script }} && openstack volume delete {{ os_instance_name }}-vol"
+  when: "os_volume_status.stdout|int != 0 and os_volume_remove|default(False)|bool == True"
+  args:
+    executable: /bin/bash

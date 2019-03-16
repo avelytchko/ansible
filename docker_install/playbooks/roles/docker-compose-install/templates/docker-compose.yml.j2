@@ -1,0 +1,14 @@
+# {{ ansible_managed }}
+version: "3"
+services:
+  hello-world:
+    image: hello-world
+    volumes:
+      - hello_world_data:/data
+volumes:
+  hello_world_data:
+    driver: local
+networks:
+  hello_world_net:
+    driver: bridge
+    internal: true

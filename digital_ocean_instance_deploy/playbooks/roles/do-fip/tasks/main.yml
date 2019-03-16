@@ -1,0 +1,139 @@
+---
+  - name: Get Floating IPs info
+    uri:
+      body_format: json
+      url: "https://api.digitalocean.com/v2/floating_ips"
+      method: GET
+      headers:
+        Content-Type: 'application/json'
+        Authorization: "Bearer {{ do_api_token }}"
+      return_content: yes
+    register: do_floating_ips_info
+
+  - set_fact:
+      do_assigned_floating_ip: "{{ item.ip }}"
+    with_items:
+      - "{{ do_floating_ips_info.json.floating_ips }}"
+    when: "item.droplet and item.droplet.name == do_droplet_actual_name"
+
+  - set_fact:
+      do_spare_floating_ip: "{{ item.ip }}"
+    with_items:
+      - "{{ do_floating_ips_info.json.floating_ips }}"
+    when: "item.region.slug == do_region_id and not item.droplet"
+
+  - block:
+    - name: Create Floating IP
+      uri:
+        body_format: json
+        url: "https://api.digitalocean.com/v2/floating_ips"
+        method: POST
+        status_code: 200,201,202
+        headers:
+          Content-Type: 'application/json'
+          Authorization: "Bearer {{ do_api_token }}"
+        body:
+          region: "{{ do_region_id }}"
+        return_content: yes
+      register: do_floating_ip_create_info
+      when: "do_assigned_floating_ip is undefined and do_spare_floating_ip is undefined"
+    when: "do_fip_remove|default(False)|bool == False"
+
+  - set_fact:
+      do_floating_ip_to_assign: "{% if do_assigned_floating_ip is not defined and do_spare_floating_ip is defined %}{{ do_spare_floating_ip }}{% else %}{{ do_floating_ip_create_info.json.floating_ip.ip }}{% endif %}"
+    when: "(do_assigned_floating_ip is not defined and do_spare_floating_ip is defined) or do_floating_ip_create_info.json is defined"
+
+  - name: Get droplets info
+    uri:
+      body_format: json
+      url: "https://api.digitalocean.com/v2/droplets"
+      method: GET
+      headers:
+        Content-Type: 'application/json'
+        Authorization: "Bearer {{ do_api_token }}"
+      return_content: yes
+    register: do_droplets_info
+
+  - set_fact:
+      do_droplet_id: "{{ item.id }}"
+    with_items:
+      - "{{ do_droplets_info.json.droplets }}"
+    when: "item.name == do_droplet_actual_name"
+
+  - block:
+
+    - name: Assign Floating IP to droplet
+      uri:
+        body_format: json
+        url: "https://api.digitalocean.com/v2/floating_ips/{{ do_floating_ip_to_assign }}/actions"
+        method: POST
+        status_code: 200,201,202
+        headers:
+          Content-Type: 'application/json'
+          Authorization: "Bearer {{ do_api_token }}"
+        body:
+          type: "assign"
+          droplet_id: "{{ do_droplet_id }}"
+        return_content: yes
+      register: do_floating_ip_create_info
+
+    - name: Wait for Floating IP assigning
+      uri:
+        body_format: json
+        url: "https://api.digitalocean.com/v2/floating_ips/{{ do_floating_ip_to_assign }}"
+        method: GET
+        headers:
+          Content-Type: 'application/json'
+          Authorization: "Bearer {{ do_api_token }}"
+        return_content: yes
+      register: do_floating_ip_assigning_info
+      until: "do_floating_ip_assigning_info.json.floating_ip.droplet.name|default('') == do_droplet_actual_name"
+      retries: 30
+
+    when: "do_droplet_id is defined and do_floating_ip_to_assign is defined and do_fip_remove|default(False)|bool == False"
+
+  - block:
+
+    - name: Unassign Floating IP from droplet
+      uri:
+        body_format: json
+        url: "https://api.digitalocean.com/v2/floating_ips/{{ do_assigned_floating_ip }}/actions"
+        method: POST
+        status_code: 200,201,202
+        headers:
+          Content-Type: 'application/json'
+          Authorization: "Bearer {{ do_api_token }}"
+        body:
+          type: "unassign"
+        return_content: yes
+      register: do_floating_ip_unassign_info
+      when: "do_assigned_floating_ip is defined"
+
+    - name: Wait for Floating IP unassigning
+      uri:
+        body_format: json
+        url: "https://api.digitalocean.com/v2/floating_ips/{{ do_assigned_floating_ip }}"
+        method: GET
+        headers:
+          Content-Type: 'application/json'
+          Authorization: "Bearer {{ do_api_token }}"
+        return_content: yes
+      register: do_floating_ip_unassigning_info
+      until: "not do_floating_ip_unassigning_info.json.floating_ip.droplet.name|default('') == do_droplet_actual_name"
+      retries: 30
+      when: "do_assigned_floating_ip is defined"
+
+    - name: Remove Floating IP
+      uri:
+        body_format: json
+        url: "https://api.digitalocean.com/v2/floating_ips/{{ do_assigned_floating_ip }}"
+        method: DELETE
+        status_code: 200,201,202,204
+        headers:
+          Content-Type: 'application/json'
+          Authorization: "Bearer {{ do_api_token }}"
+        return_content: yes
+      register: do_floating_ip_unassign_info
+      when: "do_assigned_floating_ip is defined and do_fip_delete|default(False)|bool == True"
+
+    when: "do_fip_remove|default(False)|bool == True"

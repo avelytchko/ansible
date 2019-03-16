@@ -81,6 +81,7 @@
   with_items:
     - { path: "/etc/neutron/neutron.conf", section: "database", option: "connection", value: "mysql+pymysql://neutron:{{ os_neutron_mysql_password }}@controller/neutron" }
     - { path: "/etc/neutron/neutron.conf", section: "DEFAULT", option: "core_plugin", value: "ml2" }
+    - { path: "/etc/neutron/neutron.conf", section: "DEFAULT", option: "bind_host", value: "{{ os_management_ip }}" }
     - { path: "/etc/neutron/neutron.conf", section: "DEFAULT", option: "service_plugins", value: "router" }
     - { path: "/etc/neutron/neutron.conf", section: "DEFAULT", option: "allow_overlapping_ips", value: "true" }
     - { path: "/etc/neutron/neutron.conf", section: "DEFAULT", option: "transport_url", value: "rabbit://openstack:{{ os_env_rabbitmq_openstack_password }}@controller" }

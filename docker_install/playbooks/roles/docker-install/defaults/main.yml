@@ -1,0 +1,3 @@
+---
+  docker_dm_device: sdb2
+  compose_storage_driver: overlay2

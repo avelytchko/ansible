@@ -1,0 +1,5 @@
+---
+  - hosts: digitalocean
+    gather_facts: yes
+    roles:
+      - { role: do-server, do_server_remove: True }

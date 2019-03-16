@@ -1,0 +1,5 @@
+---
+  - hosts: digitalocean
+    gather_facts: no
+    roles:
+      - { role: do-firewall, do_firewall_remove: True }

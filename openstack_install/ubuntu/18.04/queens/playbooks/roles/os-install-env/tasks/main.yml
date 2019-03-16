@@ -19,16 +19,6 @@
     state: present
   register: apt_chrony_package_install_status
 
-- name: Populate /etc/chrony.conf 
-  lineinfile:
-    path: /etc/chrony.conf
-    line: "{{ item }} iburst"
-    create: yes
-  with_items:
-    - "0.ua.pool.ntp.org"
-    - "1.ua.pool.ntp.org"
-    - "2.ua.pool.ntp.org"
-
 - name: Enable and restart chrony
   service:
     name: chrony
@@ -103,6 +93,28 @@
     name: rabbitmq-server
     state: present
   register: apt_rabbitmq_package_install_status
+
+- name: Change rabbitmq listen address
+  lineinfile:
+    path: /etc/rabbitmq/rabbitmq-env.conf
+    regexp: '^(.*)NODE_IP_ADDRESS=(.*)'
+    line: "NODE_IP_ADDRESS={{ os_management_ip }}"
+    backrefs: yes
+
+- name: Change erlang listen address
+  lineinfile:
+    path: "{{ item.path }}"
+    line: "{{ item.line }}"
+    create: yes
+  with_items:
+    - { path: "/etc/rabbitmq/rabbit.config", line: "[{kernel,[{inet_dist_use_interface,{ {{ os_management_ip.replace('.',',') }} }}]}]." }
+    - { path: "/etc/rabbitmq/rabbitmq-env.conf", line: "export ERL_EPMD_ADDRESS={{ os_management_ip }}" }
+    - { path: "/etc/rabbitmq/rabbitmq-env.conf", line: "export RABBITMQ_CONFIG_FILE=/etc/rabbitmq/rabbit" }
+
+- name: Restart rabbitmq
+  service:
+    name: rabbitmq-server
+    state: restarted
 
 - name: Add user openstack to RabbitMQ
   rabbitmq_user:

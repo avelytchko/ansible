@@ -1,0 +1,185 @@
+---
+  - hosts: openstack
+    gather_facts: yes
+    become: true
+    tasks:
+
+      - debug: var=ansible_distribution
+
+      - name: Install packages
+        apt:
+          name: "{{ item }}"
+          state: present
+        loop:
+          - aptitude
+          - git
+          - gcc
+          - libelf-dev
+          - lm-sensors
+          - make
+          - openvswitch-switch
+          - resolvconf
+
+      - name: Upgrade packages and system
+        apt:
+          update_cache: yes
+          upgrade: yes
+        register: apt_upgrade_status
+
+      - name: Disable services
+        service:
+          name: "{{ item }}"
+          state: stopped
+          enabled: no
+        with_items:
+          - ondemand
+          - systemd-resolved
+        when: "ansible_distribution == 'Ubuntu'"
+
+      - name: Create ovs bridge
+        openvswitch_bridge:
+          bridge: "{{ ovs_bridge_name }}"
+          state: present
+
+      - name: Add port to ovs bridge
+        openvswitch_port:
+          bridge: "{{ ovs_bridge_name }}"
+          port: "{{ ovs_port_name }}"
+          state: present
+
+      - name: Populate network configuration
+        lineinfile:
+          dest: /etc/network/interfaces
+          insertbefore: '^allow-hotplug enp3s0$'
+          line: 'auto enp3s0'
+          state: present
+
+      - name: Populate network configuration
+        blockinfile:
+          path: /etc/network/interfaces
+          block: |
+            auto {{ ovs_port_name }}
+            allow-hotplug {{ ovs_port_name }}
+            iface {{ ovs_port_name }} inet static
+              address 0.0.0.0
+
+            auto {{ ovs_bridge_name }}
+            iface {{ ovs_bridge_name }} inet static
+              bridge_ports {{ ovs_port_name }}
+              bridge_stp off
+              address {{ ovs_bridge_ip }}
+              netmask 255.255.254.0
+              gateway 192.168.88.1
+              dns-nameservers 192.168.88.1 1.1.1.1 8.8.8.8
+              post-up route add -net 192.168.77.0 netmask 255.255.255.0 gw 192.168.88.1
+              metric 100
+
+      - name: Add openvswitch-switch.service dependency to networking.service
+        replace:
+          path: /lib/systemd/system/networking.service
+          regexp: '^(After=.*systemd-modules-load.service)$'
+          replace: '\1 openvswitch-switch.service'
+        when: "ansible_distribution == 'Debian'"
+        register: openvswitch_switch_service_file_status
+
+      - name: Reload daemon configuration
+        shell: "systemctl daemon-reload"
+        when: "ansible_distribution == 'Debian' and openvswitch_switch_service_file_status is defined and openvswitch_switch_service_file_status.changed"
+
+      - name: Restart networking service
+        service:
+          name: networking
+          state: restarted
+
+      - name: Populate hdmarm rules
+        blockinfile:
+          path: /etc/udev/rules.d/50-hdparm.rules
+          create: yes
+          block: |
+            ACTION=="add", SUBSYSTEM=="block", KERNEL=="sdb", RUN+="/sbin/hdparm -B 255 -S 0 /dev/sdb"
+
+      - name: Change grub cmd parameters
+        lineinfile:
+          state: present
+          dest: /etc/default/grub
+          regexp: "GRUB_CMDLINE_LINUX_DEFAULT=.*$"
+          line: "GRUB_CMDLINE_LINUX_DEFAULT=\"ipv6.disable=1 processor.max_cstate=0 intel_idle.max_cstate=0 cpuidle.off=1 cpufreq.off=1 intel_pstate=disable\""
+        register: grub_conf_file_status
+
+      - name: Update grub
+        shell: "update-grub"
+        when: grub_conf_file_status.changed
+
+      - name: Install kernel headers
+        apt:
+          name: "linux-headers-{{ ansible_kernel }}"
+          state: present
+        when: "ansible_distribution == 'Debian'"
+
+      - name: Create temporary build directory
+        tempfile:
+          state: directory
+          suffix: nct6775
+        register: build_nct6775_dir
+
+      - name: Clone nct6775 driver source from git
+        git:
+          repo: 'https://github.com/avelytchko/nct6775.git'
+          dest: "{{ build_nct6775_dir.path }}"
+          clone: yes
+          update: yes
+
+      - name: Compile nct6775 driver
+        make:
+          chdir: "{{ build_nct6775_dir.path }}"
+          target: all
+
+      - name: Unload nct6775 driver
+        modprobe:
+          name: nct6775
+          state: absent
+
+      - name: Install nct6775 driver
+        make:
+          chdir: "{{ build_nct6775_dir.path }}"
+          target: install
+
+      - name: Load nct6775 driver
+        modprobe:
+          name: nct6775
+          state: present
+
+      - name: Load nct6775 driver during boot
+        lineinfile:
+          state: present
+          dest: /etc/modules-load.d/modules.conf
+          line: "nct6775"
+
+      - block:
+
+        - name: Reboot server for applying updates
+          shell: "shutdown -r +1 'Apply changes'"
+          register: reboot_status
+          until: reboot_status.rc == 0
+          retries: 6
+          delay: 10
+
+        - name: Waiting for server to shutdown
+          local_action: wait_for
+          args:
+            host: "{{ inventory_hostname }}"
+            port: 22
+            state: stopped
+            timeout: 300
+
+        - name: Waiting for server to boot
+          local_action: wait_for
+          args:
+            host: "{{ inventory_hostname }}"
+            port: 22
+            state: started
+            delay: 30
+            timeout: 300
+
+        when: grub_conf_file_status.changed or apt_upgrade_status.changed
+

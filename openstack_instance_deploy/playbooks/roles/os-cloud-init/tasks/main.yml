@@ -1,0 +1,12 @@
+---
+- name: Create user-data temporary directory
+  tempfile:
+    state: directory
+    suffix: os-user-data
+  register: os_user_data_dir
+
+- name: Populate and copy user-data.txt from template
+  template:
+    src: "user-data.txt.j2"
+    dest: "{{ os_user_data_dir.path }}/user-data.txt"
+    mode: 0644

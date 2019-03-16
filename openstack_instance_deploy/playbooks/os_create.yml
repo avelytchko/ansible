@@ -7,3 +7,4 @@
       - { role: os-image }
       - { role: os-keypair }
       - { role: os-server }
+      - { role: os-volume }

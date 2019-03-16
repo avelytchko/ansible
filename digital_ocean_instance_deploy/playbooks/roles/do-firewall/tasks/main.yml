@@ -1,0 +1,166 @@
+---
+  - name: Get firewalls info
+    uri:
+      body_format: json
+      url: "https://api.digitalocean.com/v2/firewalls"
+      method: GET
+      headers:
+        Content-Type: 'application/json'
+        Authorization: "Bearer {{ do_api_token }}"
+      return_content: yes
+    register: do_firewalls_info
+
+  - name: Check if firewall created
+    set_fact:
+      do_firewall_created: true
+      do_firewall_id_to_delete: "{{ item.id }}"
+    with_items:
+      - "{{ do_firewalls_info.json.firewalls }}"
+    when: "item.name == do_droplet_actual_name"
+
+  - name: Get Droplet info
+    uri:
+      body_format: json
+      url: "https://api.digitalocean.com/v2/droplets"
+      method: GET
+      headers:
+        Content-Type: 'application/json'
+        Authorization: "Bearer {{ do_api_token }}"
+      return_content: yes
+    register: do_droplet_info
+
+  - name: Get Droplet id
+    set_fact:
+      do_droplet_id: "{{ item.id }}"
+    with_items:
+      - "{{ do_droplet_info.json.droplets }}"
+    when: "item.name == do_droplet_actual_name"
+
+  - block:
+
+    - name: Create firewall with inbound rule
+      uri:
+        body_format: json
+        url: "https://api.digitalocean.com/v2/firewalls"
+        method: POST
+        status_code: 200,201,202
+        headers:
+          Content-Type: 'application/json'
+          Authorization: "Bearer {{ do_api_token }}"
+        body:
+          name: "{{ do_droplet_actual_name }}"
+          inbound_rules:
+          - protocol: "{{ do_firewall[0].proto }}"
+            ports: "{% if do_firewall[0].ports is defined %}{{ do_firewall[0].ports }}{% endif %}"
+            sources:
+              addresses:
+              - "{{ do_firewall[0].sources.addresses }}"
+          droplet_ids:
+          - "{{ do_droplet_id }}"
+        return_content: yes
+      when: "do_firewall_created is not defined and do_firewall[0].direction == 'inbound_rules'"
+
+    - name: Create firewall with outbound rule
+      uri:
+        body_format: json
+        url: "https://api.digitalocean.com/v2/firewalls"
+        method: POST
+        status_code: 200,201,202
+        headers:
+          Content-Type: 'application/json'
+          Authorization: "Bearer {{ do_api_token }}"
+        body:
+          name: "{{ do_droplet_actual_name }}"
+          outbound_rules:
+          - protocol: "{{ do_firewall[0].proto }}"
+            ports: "{% if do_firewall[0].ports is defined %}{{ do_firewall[0].ports }}{% endif %}"
+            destinations:
+              addresses:
+              - "{{ do_firewall[0].destinations.addresses }}"
+          droplet_ids:
+          - "{{ do_droplet_id }}"
+        return_content: yes
+      when: "do_firewall_created is not defined and do_firewall[0].direction == 'outbound_rules'"
+
+    - name: Get firewall id
+      uri:
+        body_format: json
+        url: "https://api.digitalocean.com/v2/firewalls"
+        method: GET
+        headers:
+          Content-Type: 'application/json'
+          Authorization: "Bearer {{ do_api_token }}"
+        return_content: yes
+      register: do_firewall_id_info
+
+    - name: Set firewall id
+      set_fact:
+        do_firewall_id: "{{ item.id }}"
+      with_items:
+        - "{{ do_firewall_id_info.json.firewalls }}"
+      when: "item.name == do_droplet_actual_name"
+
+    - name: Update firewall inbound rules
+      uri:
+        body_format: json
+        url: "https://api.digitalocean.com/v2/firewalls/{{ do_firewall_id }}/rules"
+        method: POST
+        status_code: 200,201,202,204
+        headers:
+          Content-Type: 'application/json'
+          Authorization: "Bearer {{ do_api_token }}"
+        body:
+          name: "{{ do_droplet_actual_name }}"
+          inbound_rules:
+          - protocol: "{{ item.proto }}"
+            ports: "{% if item.ports is defined %}{{ item.ports }}{% endif %}"
+            sources:
+              addresses:
+              - "{{ item.sources.addresses }}"
+        return_content: yes
+      register: do_firewall_update_inbound_info
+      when: "do_firewall_created is not defined and do_firewall_id is defined and item.direction == 'inbound_rules'"
+      with_items:
+        - "{{ do_firewall[1:] }}"
+
+    - name: Update firewall outbound rules
+      uri:
+        body_format: json
+        url: "https://api.digitalocean.com/v2/firewalls/{{ do_firewall_id }}/rules"
+        method: POST
+        status_code: 200,201,202,204
+        headers:
+          Content-Type: 'application/json'
+          Authorization: "Bearer {{ do_api_token }}"
+        body:
+          name: "{{ do_droplet_actual_name }}"
+          outbound_rules:
+          - protocol: "{{ item.proto }}"
+            ports: "{% if item.ports is defined %}{{ item.ports }}{% endif %}"
+            destinations:
+              addresses:
+              - "{{ item.destinations.addresses }}"
+        return_content: yes
+      register: do_firewall_update_outbound_info
+      when: "do_firewall_created is not defined and do_firewall_id is defined and item.direction == 'outbound_rules'"
+      with_items:
+        - "{{ do_firewall[1:] }}"
+
+    when: do_firewall_remove|default(False)|bool == False
+
+  - block:
+
+    - name: Remove firewall
+      uri:
+        body_format: json
+        url: "https://api.digitalocean.com/v2/firewalls/{{ do_firewall_id_to_delete }}"
+        method: DELETE
+        status_code: 200,201,204
+        headers:
+          Content-Type: 'application/json'
+          Authorization: "Bearer {{ do_api_token }}"
+        return_content: yes
+      register: do_domain_record_delete
+      when: "do_firewall_created is defined and do_firewall_id_to_delete is defined"
+
+    when: do_firewall_remove|default(False)|bool == True

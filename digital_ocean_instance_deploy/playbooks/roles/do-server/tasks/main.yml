@@ -1,0 +1,70 @@
+---
+  - name: Make sure ssh rsa key exists
+    user:
+      name: "{{ lookup('env','USER') }}"
+      generate_ssh_key: true
+      ssh_key_type: rsa
+      ssh_key_file: ".ssh/id_rsa"
+      state: present
+
+  - name: Install dopy package
+    pip:
+      name: dopy
+      state: present
+    become: yes
+
+  - block:
+
+    - name: Create ssh key for droplet
+      digital_ocean_sshkey:
+        oauth_token: "{{ do_api_token }}"
+        state: present
+        name: "{{ ansible_hostname }}"
+        ssh_pub_key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_rsa.pub') }}"
+      register: do_ssh_key_create_st
+
+    - set_fact:
+        do_user_data_input: "{{ lookup('template', 'user_data.j2') | trim }}"
+      when: do_user_data
+
+    - name: Create droplet
+      digital_ocean:
+        api_token: "{{ do_api_token }}"
+        command: droplet
+        image_id: "{{ do_image_id }}"
+        name: "{{ do_droplet_actual_name }}"
+        private_networking: "{{ do_private_networking|bool }}"
+        region_id: "{{ do_region_id }}"
+        size_id: "{{ do_size_id }}"
+        ssh_key_ids: "{{ do_ssh_key_create_st.data.ssh_key.id }}"
+        state: present
+        unique_name: true
+        user_data: "{{ do_user_data_input|default('') }}"
+        virtio: true
+        wait_timeout: 300
+      register: do_server_create_st
+
+    when: do_server_remove|default(False)|bool == False
+
+  - block:
+
+    - name: Remove droplet
+      digital_ocean:
+        api_token: "{{ do_api_token }}"
+        command: droplet
+        name: "{{ do_droplet_actual_name }}"
+        unique_name: true
+        state: absent
+        wait_timeout: 120
+
+    - name: Get ssh key fingerprint
+      shell: "ssh-keygen -E md5 -lf {{ lookup('env','HOME') + '/.ssh/id_rsa.pub' }} | awk '{ print $2 }' | cut -c 5-"
+      register: do_ssh_key_fingerprint_st
+
+    - name: Remove ssh key
+      digital_ocean_sshkey:
+        oauth_token: "{{ do_api_token }}"
+        state: absent
+        fingerprint: "{{ do_ssh_key_fingerprint_st.stdout }}"
+
+    when: do_server_remove|default(False)|bool == True

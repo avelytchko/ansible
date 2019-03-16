@@ -1,0 +1,2 @@
+---
+  do_droplet_actual_name: "{% if do_domain_name is defined %}{{ do_droplet_name }}.{{ do_domain_name }}{% else %}{{ do_droplet_name }}{% endif %}"

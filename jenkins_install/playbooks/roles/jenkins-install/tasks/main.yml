@@ -1,0 +1,60 @@
+  - set_fact:
+      jenkins_install_state: "absent"
+    when: jenkins_remove|default(False)
+
+  - name: Create user jenkins
+    user:
+      name: jenkins
+      state: "{{ jenkins_install_state|default('present') }}"
+
+  - name: Populate docker-compose.yml with jenkins service
+    blockinfile:
+      path: "{{ docker_compose_file_path }}"
+      marker_begin: "begin jenkins services block"
+      marker_end: "end jenkins services block"
+      insertafter: '^services:'
+      block: |2
+          jenkins:
+            image: jenkins/jenkins:lts
+            container_name: jenkins
+            user: jenkins
+            volumes:
+              - jenkins_home:/var/jenkins_home
+              - jenkins_data:/jenkins_config
+              - /var/run/docker.sock:/var/run/docker.sock
+            ports:
+              - "172.17.0.1:8080:8080"
+      state: "{{ jenkins_install_state|default('present') }}"
+    register: compose_file
+
+  - name: Populate docker-compose.yml with jenkins volumes
+    blockinfile:
+      path: "{{ docker_compose_file_path }}"
+      marker_begin: "begin jenkins volumes block"
+      marker_end: "end jenkins volumes block"
+      insertafter: '^volumes:'
+      block: |2
+          jenkins_data:
+            driver: local
+          jenkins_home:
+            driver: local
+      state: "{{ jenkins_install_state|default('present') }}"
+
+  - name: Validate configuration
+    command: docker-compose config -q
+    args:
+      chdir: /etc/docker-compose
+    when: compose_file.changed and docker_compose_validate
+
+  - name: Restart docker-compose service
+    systemd:
+      name: docker-compose.service
+      daemon_reload: yes
+      state: restarted
+
+  - name: Restart docker-compose-reload.timer
+    systemd:
+      name: docker-compose-reload.timer
+      daemon_reload: yes
+      state: restarted
+

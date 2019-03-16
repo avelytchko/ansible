@@ -1,0 +1,7 @@
+---
+  - hosts: openstack
+    gather_facts: no
+    roles:
+      - os-volume
+    vars:
+      os_volume_remove: True
