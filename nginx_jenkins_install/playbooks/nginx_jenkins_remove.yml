@@ -1,6 +1,0 @@
----
-  - hosts: all
-    gather_facts: yes
-    become: true
-    roles:
-      - { role: nginx-jenkins-install, nginx_remove: true }

@@ -1,3 +1,3 @@
 [instance]
-claire.rand.net.ua ansible_user=root
+pine64.rand.kiev.ua ansible_user=rand
 
