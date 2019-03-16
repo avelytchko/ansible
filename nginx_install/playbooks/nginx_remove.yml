@@ -1,0 +1,6 @@
+---
+  - hosts: all
+    gather_facts: yes
+    become: true
+    roles:
+      - { role: nginx-install, nginx_remove: true }
