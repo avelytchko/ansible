@@ -1,14 +1,14 @@
 [openstack]
-wilson.rand.kiev.ua
+host.example.com
 
 [openstack:vars]
 # for raw - https://cloud-images.ubuntu.com/releases/16.04/release/ubuntu-16.04-server-cloudimg-amd64-root.tar.gz
 os_image_url=https://cloud-images.ubuntu.com/releases/16.04/release/ubuntu-16.04-server-cloudimg-amd64-disk1.img
-os_client_project_script=/home/rand/rand-openrc
-os_client_admin_script=/home/rand/admin-openrc
+os_client_project_script=/home/user/user-openrc
+os_client_admin_script=/home/user/admin-openrc
 os_flavor_name=ubuntu-16.04
 os_flavor={"flavor1": {"vcpus": "1", "ram": "8192", "disk": "20", "swap": "8192"} }
-os_image_file_path=/home/rand/Downloads
+os_image_file_path=/home/user/Downloads
 os_image_name=ubuntu-16.04
 # Possible values - raw or qcow2
 os_image_disk_format=qcow2
@@ -19,11 +19,11 @@ os_provider_network_name=public
 os_selfservice_network_name=internal
 # allowed values are 'provider' and 'selfservice'
 os_network_type=selfservice
-os_instance_ip=192.168.89.23
+os_instance_ip=192.168.0.10
 os_security_group_name=ubuntu-16.04
 os_security_group_rules={"rule1": {"proto": "tcp", "port": "2106"}, "rule2": {"proto": "tcp", "port": "9014"}, "rule3": {"proto": "tcp", "port": "7777"}, "rule4": {"proto": "tcp", "port": "22"}, "rule5": {"proto": "icmp"}, "rule6": {"proto": "tcp", "port": "80"} }
 # size in GBs
 os_volume_size=10
-os_instance_user_name=rand
-os_instance_user_pass=$1$cmNLUZir$poRU.dcGqWNpsCbc1yXgp/
+os_instance_user_name=user
+os_instance_user_pass=secret
 os_instance_cloud_init_runcmd="test -e /usr/bin/python || (/usr/bin/apt-get install -y python)"

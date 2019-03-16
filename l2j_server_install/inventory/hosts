@@ -1,9 +1,8 @@
 [l2j]
-wilson.rand.kiev.ua ansible_host=192.168.89.23 ansible_ssh_private_key_file=/home/rand/.ssh/id_rsa_ubuntu1710 ansible_user=ubuntu
+host.example.com ansible_host=192.168.0.3 ansible_ssh_private_key_file=/home/user/.ssh/id_rsa ansible_user=user
 
 [l2j:vars]
 l2j_server_dir=/opt/l2j
 mysql_root_password=
 mysql_l2jgs_password=
 mysql_l2jls_password=
-

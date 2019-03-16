@@ -1,6 +1,6 @@
 docker_compose_file_path: "/etc/docker-compose/docker-compose.yml"
 letsencrypt_install: true
-letsencrypt_certbot_email: "avelytchko@gmail.com"
+letsencrypt_certbot_email: "user@host.example.com"
 nginx_templates:
   - jenkins
   - transmission

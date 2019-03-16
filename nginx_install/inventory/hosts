@@ -1,2 +1,2 @@
 [instance]
-pine64.rand.kiev.ua ansible_user=rand
+host.example.com

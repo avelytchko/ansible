@@ -1,12 +1,12 @@
 [openstack]
-host.example.com ansible_user=username os_management_ip=192.168.0.2
+host.example.com ansible_user=user os_management_ip=192.168.0.2
 
 [openstack:vars]
 os_env_mysql_root_password=secret
 os_env_rabbitmq_openstack_password=secret
 os_keystone_mysql_password=secret
 os_keystone_admin_password=secret
-os_keystone_demo_user=rand
+os_keystone_demo_user=user
 os_keystone_demo_password=secret
 os_glance_mysql_password=secret
 os_glance_password=secret
